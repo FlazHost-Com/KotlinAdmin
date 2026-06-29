@@ -1,5 +1,6 @@
 package com.kotlinadmin.modules.setting.routes
 
+import com.kotlinadmin.core.helpers.respondJson
 import com.kotlinadmin.core.helpers.respondView
 import com.kotlinadmin.core.routing.*
 import com.kotlinadmin.core.session.withFlash
@@ -7,6 +8,7 @@ import com.kotlinadmin.modules.setting.services.ISettingService
 import com.kotlinadmin.modules.setting.services.UpdateSettingDto
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -21,10 +23,13 @@ fun Application.settingModule() {
             val session = call.requireAuthenticated()
             call.checkAccess("admin.v1.setting.index", "GET")
             val setting = settingService.get()
-            call.respondView("setting/index.ftl", mapOf(
-                "setting_data" to setting,
-                "page_title" to "Setting"
-            ))
+            call.respondView(
+                "setting/index.ftl",
+                mapOf(
+                    "setting_data" to setting,
+                    "page_title" to "Setting"
+                )
+            )
         }
 
         namedPut("admin.v1.setting.update", "/admin/v1/setting/update") {
@@ -65,6 +70,26 @@ fun Application.settingModule() {
 
             val html = settingService.previewTemplate(slug)
             call.respondText(html, ContentType.Text.Html)
+        }
+    }
+}
+
+fun Application.settingApiModule() {
+    val settingService = get<ISettingService>()
+
+    routing {
+        authenticate("api") {
+            namedGet("api.v1.setting.index", "/api/v1/setting") {
+                val s = settingService.get()
+                call.respondJson(
+                    data = mapOf(
+                        "id" to s.id,
+                        "name" to (s.name ?: ""),
+                        "theme" to s.theme,
+                        "fe_template" to s.feTemplate
+                    )
+                )
+            }
         }
     }
 }

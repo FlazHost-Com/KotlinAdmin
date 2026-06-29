@@ -1,5 +1,6 @@
 package com.kotlinadmin.security
 
+import com.kotlinadmin.module
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
@@ -7,7 +8,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
-import com.kotlinadmin.module
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -114,7 +114,10 @@ class RbacSecurityTest : DescribeSpec({
                 application { module() }
                 // Using a known-expired token structure (will fail signature/exp check)
                 val response = client.get("/api/v1/auth/me") {
-                    header(HttpHeaders.Authorization, "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoxfQ.invalid")
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoxfQ.invalid"
+                    )
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
             }

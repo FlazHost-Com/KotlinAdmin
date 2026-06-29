@@ -21,16 +21,14 @@ import io.ktor.server.response.respondText
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
-import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -93,8 +91,8 @@ suspend fun ApplicationCall.respondView(
                             .selectAll()
                             .where {
                                 (Roles.name inList userRoles) and
-                                (Permissions.name eq routeName) and
-                                (Permissions.method eq method)
+                                    (Permissions.name eq routeName) and
+                                    (Permissions.method eq method)
                             }
                             .count() > 0
                     }

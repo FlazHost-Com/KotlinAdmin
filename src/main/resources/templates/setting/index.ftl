@@ -19,7 +19,7 @@
 
         <!-- General -->
         <div class="tw-card p-6 mb-6">
-          <h2 class="text-lg font-semibold mb-4" style="color:var(--primary)">General Settings</h2>
+          <h2 class="text-lg font-semibold mb-4" style="color:var(--primary)">Setting Form</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="form-label">[name] App Name</label>
@@ -31,7 +31,7 @@
             </div>
             <div>
               <label class="form-label">[description] Description</label>
-              <textarea name="description" rows="3" class="form-control">${setting.description!""}</textarea>
+              <textarea name="description" rows="3" class="trumbowyg-editor form-control">${setting.description!""}</textarea>
             </div>
             <div>
               <label class="form-label">[keywords] Keywords</label>
@@ -61,32 +61,75 @@
           </div>
         </div>
 
-        <!-- Theme -->
+        <!-- Admin Theme -->
         <div class="tw-card p-6 mb-6">
-          <h2 class="text-lg font-semibold mb-4" style="color:var(--primary)">Theme</h2>
-          <div class="mb-4">
-            <label class="form-label">[theme] Active Theme</label>
-            <div class="d-flex gap-2 flex-wrap">
-              <#list themes as t>
-              <label class="cursor-pointer">
-                <input type="radio" name="theme" value="${t.name}" class="sr-only"
-                       <#if (setting.theme!"Blue") == t.name>checked</#if>
-                       onchange="applyThemePreview(this)">
-                <div class="tw-card p-2 theme-swatch-card"
-                     style="width:80px;cursor:pointer;border:2px solid <#if (setting.theme!"Blue") == t.name>var(--primary)<#else>transparent</#if>">
-                  <div class="rounded mb-1" style="height:20px;background:${t.primary}"></div>
-                  <div class="rounded" style="height:8px;background:${t.secondary}"></div>
-                  <p class="text-xs mt-1 text-center">${t.name}</p>
-                </div>
-              </label>
-              </#list>
-            </div>
+          <div class="flex items-center gap-2 mb-1">
+            <i class="fas fa-palette" style="color:var(--primary)"></i>
+            <h2 class="text-lg font-semibold" style="color:var(--primary)">Admin Theme</h2>
           </div>
-          <div class="flex gap-2">
-            <button type="button" class="btn btn-light btn-sm"
-                    onclick="document.getElementById('fe-catalog-modal').style.display='flex'">
-              <i class="fas fa-th-large"></i> FE Templates
-            </button>
+          <p class="text-sm text-gray-500 mb-4">Choose a theme — admin appearance will update after saving.</p>
+          <div class="d-flex gap-3 flex-wrap">
+            <#list themes as t>
+            <label class="cursor-pointer block">
+              <input type="radio" name="theme" value="${t.name}" class="sr-only theme-radio"
+                     <#if (setting.theme!"Blue") == t.name>checked</#if>
+                     onchange="applyThemePreview(this)">
+              <div class="theme-swatch rounded-xl overflow-hidden border-2 transition"
+                   style="width:90px;cursor:pointer;border-color:<#if (setting.theme!"Blue") == t.name>var(--primary)<#else>transparent</#if>;box-shadow:0 4px 10px rgba(0,0,0,.08)">
+                <div style="height:40px;display:flex">
+                  <div style="flex:1;background:${t.dark}"></div>
+                  <div style="flex:1;background:${t.primary}"></div>
+                  <div style="flex:1;background:${t.secondary}"></div>
+                  <div style="flex:1;background:${t.light}"></div>
+                </div>
+                <div class="bg-white py-1 px-2 d-flex align-items-center justify-content-between">
+                  <span class="text-xs fw-semibold text-gray-700">${t.name}</span>
+                  <i class="fas fa-check-circle check-icon<#if (setting.theme!"Blue") != t.name> hidden</#if>" style="color:${t.primary}"></i>
+                </div>
+              </div>
+            </label>
+            </#list>
+          </div>
+        </div>
+
+        <!-- Frontend Template -->
+        <input type="hidden" id="fe_template_input" name="fe_template" value="${setting.fe_template!""}">
+        <div class="tw-card p-6 mb-6">
+          <div class="flex items-center gap-2 mb-1">
+            <i class="fas fa-window-maximize" style="color:var(--primary)"></i>
+            <h2 class="text-lg font-semibold" style="color:var(--primary)">Frontend Template</h2>
+          </div>
+          <p class="text-sm text-gray-500 mb-3">Choose a frontend landing page template. It will be downloaded and applied on Save.</p>
+          <form id="fe_search" method="GET" action="/admin/v1/setting"></form>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <input form="fe_search" type="text" name="q_name" placeholder="Search templates…" class="form-control" style="max-width:200px">
+            <button form="fe_search" type="submit" class="btn btn-success btn-sm"><i class="fas fa-search me-1"></i> Search</button>
+            <a href="/admin/v1/setting" class="btn btn-danger btn-sm"><i class="fas fa-times me-1"></i> Reset</a>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <#assign feOptions = ["agency-consulting-002-creative-agency","portfolio-001-minimal","corporate-003-professional","landing-004-startup","saas-005-saas-landing","ecommerce-001-online-shop"]>
+            <#list feOptions as fe>
+            <div class="fe-card" data-slug="${fe}">
+              <div class="fe-swatch rounded-xl overflow-hidden border-2 <#if (setting.fe_template!"") == fe>border-gray-900<#else>border-gray-300</#if>" style="box-shadow:0 2px 8px rgba(0,0,0,.12)">
+                <div class="fe-thumb fe-preview-trigger bg-gray-100 d-flex align-items-center justify-content-center" style="height:80px">
+                  <i class="fas fa-image fa-2x text-gray-300"></i>
+                </div>
+                <div class="bg-white py-2 px-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-xs fw-semibold text-gray-800 text-truncate">${fe}</span>
+                    <i class="fas fa-check-circle fe-check<#if (setting.fe_template!"") != fe> hidden</#if>" style="color:var(--primary)"></i>
+                  </div>
+                  <button type="button" class="fe-select btn btn-sm w-100 mt-2 fw-bold <#if (setting.fe_template!"") == fe>btn-primary-tw<#else>btn-outline-dark</#if>" style="font-size:11px">
+                    <#if (setting.fe_template!"") == fe>
+                    <i class="fas fa-check me-1"></i> TERPILIH
+                    <#else>
+                    <i class="fas fa-hand-pointer me-1"></i> PILIH
+                    </#if>
+                  </button>
+                </div>
+              </div>
+            </div>
+            </#list>
           </div>
         </div>
 
@@ -124,7 +167,7 @@
               <label class="form-label">[login_image] Login Image</label>
               <img id="login-img-preview" src="${setting.loginImage!""}" alt="login image" width="120" height="80"
                    class="rounded mb-2 object-cover border border-gray-200" style="display:block">
-              <input type="file" name="loginImage" accept="image/*" class="form-control"
+              <input type="file" name="login_image" accept="image/*" class="form-control"
                      onchange="previewImage(this, 'login-img-preview')">
             </div>
           </div>
@@ -169,34 +212,7 @@
     </main>
   </div>
 </div>
-<#-- FE Template Catalog Modal -->
-<div id="fe-catalog-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
-  <div class="tw-card" style="width:600px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;">
-    <div class="modal-header">
-      <span class="modal-title">FE Template Catalog</span>
-      <button class="modal-close" onclick="document.getElementById('fe-catalog-modal').style.display='none'">&times;</button>
-    </div>
-    <div class="modal-body" style="overflow-y:auto;flex:1;">
-      <p class="text-gray-500 text-sm mb-4">Select a front-end template for your site.</p>
-      <div class="grid grid-cols-2 gap-3" id="fe-catalog-grid">
-        <#assign feOptions = ["agency-consulting-002-creative-agency","portfolio-001-minimal","corporate-003-professional","landing-004-startup"]>
-        <#list feOptions as fe>
-        <div class="tw-card p-3 cursor-pointer hover:border-primary-tw"
-             style="border:2px solid <#if (setting.fe_template!"") == fe>var(--primary)<#else>#e5e7eb</#if>"
-             onclick="selectFeTemplate('${fe}')">
-          <p class="text-xs font-mono text-gray-600 break-all">${fe}</p>
-          <#if (setting.fe_template!"") == fe>
-          <span class="badge text-bg-primary mt-1">Active</span>
-          </#if>
-        </div>
-        </#list>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-light btn-sm" onclick="document.getElementById('fe-catalog-modal').style.display='none'">Close</button>
-    </div>
-  </div>
-</div>
+
 
 <#include "/layouts/foot.ftl">
 <script>
@@ -213,26 +229,39 @@ function applyThemePreview(radio) {
   document.documentElement.style.setProperty('--secondary', t.secondary);
   document.documentElement.style.setProperty('--theme-light', t.light);
   document.documentElement.style.setProperty('--theme-dark', t.dark);
-  // Update swatch borders
-  document.querySelectorAll('input[name="theme"]').forEach(function(r) {
-    var card = r.nextElementSibling;
-    if (card) card.style.borderColor = r.checked ? 'var(--primary)' : 'transparent';
+  document.querySelectorAll('.theme-swatch').forEach(function(s) {
+    s.style.borderColor = 'transparent';
   });
+  document.querySelectorAll('.check-icon').forEach(function(c) { c.classList.add('hidden'); });
+  var swatch = radio.nextElementSibling;
+  if (swatch) swatch.style.borderColor = 'var(--primary)';
+  var icon = radio.closest('label') && radio.closest('label').querySelector('.check-icon');
+  if (icon) icon.classList.remove('hidden');
 }
 
-// FE template picker
-function selectFeTemplate(slug) {
-  var hidden = document.querySelector('input[name="fe_template"]');
-  if (!hidden) {
-    hidden = document.createElement('input');
-    hidden.type = 'hidden';
-    hidden.name = 'fe_template';
-    document.querySelector('form').appendChild(hidden);
-  }
-  hidden.value = slug;
-  document.getElementById('fe-catalog-modal').style.display = 'none';
-  window.Toast && window.Toast('Template selected: ' + slug, 'success');
-}
+// FE template selection (inline cards)
+var feInput = document.getElementById('fe_template_input');
+document.querySelectorAll('.fe-select').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var slug = this.closest('.fe-card').getAttribute('data-slug');
+    if (feInput) feInput.value = slug;
+    document.querySelectorAll('.fe-card').forEach(function(c) {
+      var isA = c.getAttribute('data-slug') === slug;
+      var sw = c.querySelector('.fe-swatch');
+      var ch = c.querySelector('.fe-check');
+      var b  = c.querySelector('.fe-select');
+      if (sw) { sw.classList.toggle('border-gray-900', isA); sw.classList.toggle('border-gray-300', !isA); }
+      if (ch) ch.classList.toggle('hidden', !isA);
+      if (b) {
+        b.classList.toggle('btn-primary-tw', isA);
+        b.classList.toggle('btn-outline-dark', !isA);
+        b.innerHTML = isA
+          ? '<i class="fas fa-check me-1"></i> TERPILIH'
+          : '<i class="fas fa-hand-pointer me-1"></i> PILIH';
+      }
+    });
+  });
+});
 </script>
 </body>
 </html>

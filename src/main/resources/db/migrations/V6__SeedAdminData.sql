@@ -1,9 +1,8 @@
 -- Seed: Administrator role
-INSERT OR IGNORE INTO roles (id, name, guard_name, status, "desc", created_by, updated_by, created_at, updated_at)
+INSERT OR IGNORE INTO roles (id, name, status, "desc", created_by, updated_by, created_at, updated_at)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'Administrator',
-    'web',
     'Active',
     '',
     'system',
@@ -21,7 +20,7 @@ VALUES (
     '12345678910',
     'admin@admin.com',
     CURRENT_TIMESTAMP,
-    '$2a$10$EixZaYVK1fsbw1ZfbX3OXePhaIBjPr5de45/RVE85C5S9K5a7FuHi',
+    '$2a$10$s6QlWQGn5lk.vHJLgereKOnw1RrLDfpDsQvZRXEufTDhyTHSO19oa',
     'Active',
     'Asia/Jakarta',
     0,

@@ -3,14 +3,14 @@ package com.kotlinadmin.modules.access.routes
 import com.kotlinadmin.core.helpers.respondJson
 import com.kotlinadmin.core.helpers.respondView
 import com.kotlinadmin.core.routing.*
-import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.core.session.withErrors
-import com.kotlinadmin.modules.access.dto.RoleDto
-import com.kotlinadmin.modules.access.dto.DeleteSelectedDto
+import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.modules.access.dto.BulkPermissionDto
+import com.kotlinadmin.modules.access.dto.DeleteSelectedDto
+import com.kotlinadmin.modules.access.dto.RoleDto
 import com.kotlinadmin.modules.access.models.toMap
-import com.kotlinadmin.modules.access.services.IRoleService
 import com.kotlinadmin.modules.access.services.IPermissionService
+import com.kotlinadmin.modules.access.services.IRoleService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -32,11 +32,14 @@ fun Application.accessRoleWebModule() {
                 call.checkAccess("admin.v1.access.role.index", "GET")
                 val params = call.request.queryParameters
                 val result = roleService.index(params)
-                call.respondView("access/roles/index.ftl", mapOf(
-                    "datas" to result.items,
-                    "paginate_data" to result.paginateData,
-                    "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
-                ))
+                call.respondView(
+                    "access/roles/index.ftl",
+                    mapOf(
+                        "datas" to result.items,
+                        "paginate_data" to result.paginateData,
+                        "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
+                    )
+                )
             }
 
             namedGet("admin.v1.access.role.create", "/create") {
@@ -58,12 +61,20 @@ fun Application.accessRoleWebModule() {
                 if (name.isBlank()) errors["name"] = "Name is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf("name" to name, "status" to status, "description" to description)))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf("name" to name, "status" to status, "description" to description)
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/role/create")
                     return@namedPost
                 }
 
-                roleService.store(RoleDto(name = name, status = status, description = description.ifBlank { null }), session.userId)
+                roleService.store(
+                    RoleDto(name = name, status = status, description = description.ifBlank { null }),
+                    session.userId
+                )
                 call.sessions.set(session.withFlash("success", "Create Role Success."))
                 call.respondRedirect("/admin/v1/access/role")
             }
@@ -90,12 +101,21 @@ fun Application.accessRoleWebModule() {
                 if (name.isBlank()) errors["name"] = "Name is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf("name" to name, "status" to status, "description" to description)))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf("name" to name, "status" to status, "description" to description)
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/role/$id/edit")
                     return@namedPut
                 }
 
-                roleService.update(id, RoleDto(name = name, status = status, description = description.ifBlank { null }), session.userId)
+                roleService.update(
+                    id,
+                    RoleDto(name = name, status = status, description = description.ifBlank { null }),
+                    session.userId
+                )
                 call.sessions.set(session.withFlash("success", "Update Role Success."))
                 call.respondRedirect("/admin/v1/access/role")
             }
@@ -136,12 +156,15 @@ fun Application.accessRoleWebModule() {
                 val params = call.request.queryParameters
                 val role = roleService.edit(id)
                 val result = roleService.getPermissions(id, params)
-                call.respondView("access/roles/permission.ftl", mapOf(
-                    "role" to role.toMap(),
-                    "datas" to result.items.map { it.toMap() },
-                    "paginate_data" to result.paginateData,
-                    "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
-                ))
+                call.respondView(
+                    "access/roles/permission.ftl",
+                    mapOf(
+                        "role" to role.toMap(),
+                        "datas" to result.items.map { it.toMap() },
+                        "paginate_data" to result.paginateData,
+                        "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
+                    )
+                )
             }
 
             namedGet("admin.v1.access.role.permission.assign", "/{id}/permission/{permId}/assign") {
@@ -199,14 +222,22 @@ fun Application.accessRoleApiModule() {
                 namedGet("api.v1.access.role.index") {
                     val params = call.request.queryParameters
                     val result = roleService.index(params)
-                    call.respondJson(data = mapOf("data" to result.items, "pagination" to result.paginateData))
+                    call.respondJson(
+                        data = mapOf(
+                            "data" to result.items.map { it.toMap() },
+                            "pagination" to result.paginateData.toMap()
+                        )
+                    )
                 }
 
                 namedPost("api.v1.access.role.store", "/store") {
                     val principal = call.principal<JWTPrincipal>()!!
                     val dto = call.receive<RoleDto>()
                     val role = roleService.store(dto, principal.subject!!)
-                    call.respondJson(HttpStatusCode.Created, data = mapOf("message" to "Role created", "data" to role.toMap()))
+                    call.respondJson(
+                        HttpStatusCode.Created,
+                        data = mapOf("message" to "Role created", "data" to role.toMap())
+                    )
                 }
 
                 namedGet("api.v1.access.role.edit", "/{id}/edit") {
@@ -232,7 +263,9 @@ fun Application.accessRoleApiModule() {
                 namedPost("api.v1.access.role.delete_selected", "/delete_selected") {
                     val dto = call.receive<DeleteSelectedDto>()
                     roleService.deleteSelected(dto.selected)
-                    call.respondJson(data = mapOf("message" to "${dto.selected.size} role(s) deleted", "count" to dto.selected.size))
+                    call.respondJson(
+                        data = mapOf("message" to "${dto.selected.size} role(s) deleted", "count" to dto.selected.size)
+                    )
                 }
 
                 // Permission management
@@ -241,7 +274,9 @@ fun Application.accessRoleApiModule() {
                     permissionService.syncFromRouteRegistry()
                     val params = call.request.queryParameters
                     val result = roleService.getPermissions(id, params)
-                    call.respondJson(data = mapOf("data" to result.items.map { it.toMap() }, "pagination" to result.paginateData))
+                    call.respondJson(
+                        data = mapOf("data" to result.items.map { it.toMap() }, "pagination" to result.paginateData)
+                    )
                 }
 
                 namedGet("api.v1.access.role.permission.assign", "/{id}/permission/{permId}/assign") {

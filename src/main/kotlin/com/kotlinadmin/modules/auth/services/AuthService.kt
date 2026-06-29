@@ -7,7 +7,6 @@ import com.kotlinadmin.core.errors.NotFoundError
 import com.kotlinadmin.core.errors.UnauthorizedError
 import com.kotlinadmin.core.errors.ValidationError
 import com.kotlinadmin.core.helpers.OtpHelper
-import com.kotlinadmin.modules.access.models.RoleEntity
 import com.kotlinadmin.modules.access.models.Roles
 import com.kotlinadmin.modules.access.models.UserEntity
 import com.kotlinadmin.modules.access.models.Users
@@ -15,7 +14,6 @@ import com.kotlinadmin.modules.access.models.UsersRoles
 import com.kotlinadmin.modules.auth.dto.RegisterDto
 import com.kotlinadmin.modules.auth.dto.ResetProcessDto
 import com.kotlinadmin.modules.auth.dto.ResetRequestDto
-import org.jetbrains.exposed.sql.and
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
 import java.util.UUID
@@ -26,15 +24,19 @@ class AuthService(
     private val otpExpiryMinutes: Long = 10L
 ) : IAuthService {
 
-    // authLimiter: 10 req / 15 min / IP
+    private fun isLoopback(ip: String) = ip == "127.0.0.1" || ip == "::1" || ip == "0:0:0:0:0:0:0:1"
+
+    // authLimiter: 10 req / 15 min / IP (loopback exempt)
     override suspend fun checkAuthRateLimit(ip: String) {
+        if (isLoopback(ip)) return
         val key = "auth_rate:$ip"
         val count = redis.incrementRateLimit(key, 900L)
         if (count > 10) throw ValidationError("Too many requests. Please try again later.")
     }
 
-    // otpLimiter: 5 req / 15 min / IP
+    // otpLimiter: 5 req / 15 min / IP (loopback exempt)
     override suspend fun checkOtpRateLimit(ip: String) {
+        if (isLoopback(ip)) return
         val key = "otp_proc_rate:$ip"
         val count = redis.incrementRateLimit(key, 900L)
         if (count > 5) throw ValidationError("Too many OTP attempts. Please wait before trying again.")
@@ -54,8 +56,9 @@ class AuthService(
             if (dto.password != it) throw ValidationError("Password confirmation does not match")
         }
         return dbQuery {
-            if (UserEntity.find { Users.email eq dto.email }.firstOrNull() != null)
+            if (UserEntity.find { Users.email eq dto.email }.firstOrNull() != null) {
                 throw ConflictError("Email already exists.")
+            }
             val now = Instant.now()
             UserEntity.new(UUID.randomUUID().toString()) {
                 code = "U${System.currentTimeMillis() % 100000}"

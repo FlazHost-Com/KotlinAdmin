@@ -15,229 +15,398 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-        <p class="text-gray-500 text-sm mt-1">
-          Welcome back, <strong>${(user.name)!"Admin"}</strong>! — ${currentDate!""}
-        </p>
-      </div>
 
-      <#-- 4 Stat Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <div class="tw-card p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-500 text-sm">Total Users</p>
-              <p class="text-3xl font-bold counter" data-target="${(stats.totalUsers)!0}"
-                 style="color:var(--primary)">0</p>
-            </div>
-            <div class="rounded-full p-3" style="background:var(--theme-light)">
-              <i class="fas fa-users fa-2x" style="color:var(--primary)"></i>
-            </div>
+<div class="flex items-center justify-between mb-2">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
+    <p class="text-sm text-gray-600">Selamat datang kembali, ${(user.name)!"Admin"}! Berikut ringkasan hari ini.</p>
+  </div>
+  <span class="text-sm text-gray-500"><span id="dash-date"></span></span>
+</div>
+
+<!-- ===== Stats Cards ===== -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-4">
+  <div class="stat-card bg-white rounded-xl shadow-lg p-6 hover-scale" style="border-left:4px solid var(--primary)">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Users</p>
+        <p class="text-3xl font-bold text-gray-800 counter" data-target="${(stats.totalUsers)!0}">0</p>
+        <p class="text-gray-400 text-sm mt-1">pengguna terdaftar</p>
+      </div>
+      <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:var(--theme-light)">
+        <i class="fas fa-users text-xl" style="color:var(--primary)"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card bg-white rounded-xl shadow-lg p-6 hover-scale border-l-4 border-green-500">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Roles</p>
+        <p class="text-3xl font-bold text-gray-800 counter" data-target="${(stats.totalRoles)!0}">0</p>
+        <p class="text-gray-400 text-sm mt-1">peran akses</p>
+      </div>
+      <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-user-shield text-green-600 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card bg-white rounded-xl shadow-lg p-6 hover-scale border-l-4 border-yellow-500">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Permissions</p>
+        <p class="text-3xl font-bold text-gray-800 counter" data-target="${(stats.totalPermissions)!0}">0</p>
+        <p class="text-gray-400 text-sm mt-1">izin terdaftar</p>
+      </div>
+      <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-key text-yellow-600 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card bg-white rounded-xl shadow-lg p-6 hover-scale border-l-4 border-purple-500">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Theme Aktif</p>
+        <p class="text-2xl font-bold text-gray-800">${themeName!"Blue"}</p>
+        <p class="text-gray-400 text-sm mt-1">template</p>
+      </div>
+      <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-palette text-purple-600 text-xl"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Charts ===== -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-800">Sales Overview</h3>
+      <select class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none">
+        <option>Last 7 days</option><option>Last 30 days</option><option>Last 3 months</option>
+      </select>
+    </div>
+    <div class="h-64"><canvas id="salesChart"></canvas></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-800">Traffic Sources</h3>
+      <button class="text-sm font-medium" style="color:var(--primary)">View All</button>
+    </div>
+    <div class="h-64"><canvas id="trafficChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ===== Recent Activities & Top Products ===== -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Recent Activities -->
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h3>
+    <div class="space-y-4">
+      <div class="flex items-center gap-3 p-3 rounded-lg" style="background:var(--theme-light)">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--primary)"><i class="fas fa-user text-white text-xs"></i></div>
+        <div class="flex-1"><p class="text-sm font-medium text-gray-800">New user registered</p><p class="text-xs text-gray-500">john.doe@example.com - 2 minutes ago</p></div>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"><i class="fas fa-shopping-cart text-white text-xs"></i></div>
+        <div class="flex-1"><p class="text-sm font-medium text-gray-800">New order placed</p><p class="text-xs text-gray-500">Order #12345 - $299.99 - 15 minutes ago</p></div>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center"><i class="fas fa-exclamation text-white text-xs"></i></div>
+        <div class="flex-1"><p class="text-sm font-medium text-gray-800">Low stock alert</p><p class="text-xs text-gray-500">Product ABC - Only 5 items left - 1 hour ago</p></div>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center"><i class="fas fa-star text-white text-xs"></i></div>
+        <div class="flex-1"><p class="text-sm font-medium text-gray-800">New review received</p><p class="text-xs text-gray-500">5 stars for Product XYZ - 2 hours ago</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold text-gray-800">Top Products</h3>
+      <span class="text-sm px-3 py-1 rounded-full font-medium" style="color:var(--primary);background:var(--theme-light)">This Month</span>
+    </div>
+    <div class="space-y-3">
+      <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all group">
+        <div class="flex items-center w-4/5">
+          <div class="relative flex-shrink-0 mr-3">
+            <div class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center" style="background:var(--primary)"><i class="fas fa-headphones text-white text-sm"></i></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background:var(--primary)"><span class="text-white text-xs font-bold leading-none">1</span></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold text-gray-800">Premium Headphones</h4>
+            <p class="text-sm text-gray-500">Electronics • 234 sold</p>
           </div>
         </div>
-        <div class="tw-card p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-500 text-sm">Total Roles</p>
-              <p class="text-3xl font-bold counter" data-target="${(stats.totalRoles)!0}"
-                 style="color:var(--primary)">0</p>
-            </div>
-            <div class="rounded-full p-3" style="background:var(--theme-light)">
-              <i class="fas fa-user-shield fa-2x" style="color:var(--primary)"></i>
-            </div>
-          </div>
-        </div>
-        <div class="tw-card p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-500 text-sm">Total Permissions</p>
-              <p class="text-3xl font-bold counter" data-target="${(stats.totalPermissions)!0}"
-                 style="color:var(--primary)">0</p>
-            </div>
-            <div class="rounded-full p-3" style="background:var(--theme-light)">
-              <i class="fas fa-key fa-2x" style="color:var(--primary)"></i>
-            </div>
-          </div>
-        </div>
-        <div class="tw-card p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-500 text-sm">Active Theme</p>
-              <p class="text-xl font-bold mt-1" style="color:var(--primary)">${themeName!"Blue"}</p>
-            </div>
-            <div class="rounded-full p-3" style="background:var(--theme-light)">
-              <i class="fas fa-palette fa-2x" style="color:var(--primary)"></i>
-            </div>
-          </div>
+        <div class="text-right w-1/5 pl-3">
+          <p class="text-lg font-bold text-gray-800">$299</p>
+          <p class="text-sm flex items-center justify-end text-green-600"><i class="fas fa-arrow-up text-xs mr-1"></i>+15%</p>
         </div>
       </div>
-
-      <#-- Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <div class="lg:col-span-2 tw-card p-6">
-          <h3 class="font-semibold text-gray-700 mb-4">Monthly Users</h3>
-          <canvas id="lineChart" height="100"></canvas>
+      <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all group">
+        <div class="flex items-center w-4/5">
+          <div class="relative flex-shrink-0 mr-3">
+            <div class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center" style="background:#10B981"><i class="fas fa-clock text-white text-sm"></i></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background:#10B981"><span class="text-white text-xs font-bold leading-none">2</span></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold text-gray-800">Smart Watch</h4>
+            <p class="text-sm text-gray-500">Wearables • 189 sold</p>
+          </div>
         </div>
-        <div class="tw-card p-6">
-          <h3 class="font-semibold text-gray-700 mb-4">Distribution</h3>
-          <canvas id="doughnutChart" height="200"></canvas>
-          <div class="mt-4 space-y-2 text-sm">
+        <div class="text-right w-1/5 pl-3">
+          <p class="text-lg font-bold text-gray-800">$199</p>
+          <p class="text-sm flex items-center justify-end text-green-600"><i class="fas fa-arrow-up text-xs mr-1"></i>+8%</p>
+        </div>
+      </div>
+      <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all group">
+        <div class="flex items-center w-4/5">
+          <div class="relative flex-shrink-0 mr-3">
+            <div class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center" style="background:#F59E0B"><i class="fas fa-laptop text-white text-sm"></i></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background:#F59E0B"><span class="text-white text-xs font-bold leading-none">3</span></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold text-gray-800">Laptop Stand</h4>
+            <p class="text-sm text-gray-500">Accessories • 156 sold</p>
+          </div>
+        </div>
+        <div class="text-right w-1/5 pl-3">
+          <p class="text-lg font-bold text-gray-800">$49</p>
+          <p class="text-sm flex items-center justify-end text-red-600"><i class="fas fa-arrow-down text-xs mr-1"></i>-3%</p>
+        </div>
+      </div>
+      <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all group">
+        <div class="flex items-center w-4/5">
+          <div class="relative flex-shrink-0 mr-3">
+            <div class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center" style="background:#8B5CF6"><i class="fas fa-mouse text-white text-sm"></i></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background:#8B5CF6"><span class="text-white text-xs font-bold leading-none">4</span></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold text-gray-800">Gaming Mouse</h4>
+            <p class="text-sm text-gray-500">Gaming • 143 sold</p>
+          </div>
+        </div>
+        <div class="text-right w-1/5 pl-3">
+          <p class="text-lg font-bold text-gray-800">$79</p>
+          <p class="text-sm flex items-center justify-end text-green-600"><i class="fas fa-arrow-up text-xs mr-1"></i>+12%</p>
+        </div>
+      </div>
+      <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all group">
+        <div class="flex items-center w-4/5">
+          <div class="relative flex-shrink-0 mr-3">
+            <div class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center" style="background:#EF4444"><i class="fas fa-mobile-alt text-white text-sm"></i></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background:#EF4444"><span class="text-white text-xs font-bold leading-none">5</span></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold text-gray-800">Phone Case</h4>
+            <p class="text-sm text-gray-500">Accessories • 127 sold</p>
+          </div>
+        </div>
+        <div class="text-right w-1/5 pl-3">
+          <p class="text-lg font-bold text-gray-800">$25</p>
+          <p class="text-sm flex items-center justify-end text-green-600"><i class="fas fa-arrow-up text-xs mr-1"></i>+7%</p>
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t border-gray-100">
+      <button class="w-full text-center font-medium text-sm py-2 rounded-lg" style="color:var(--primary)">View All Products <i class="fas fa-arrow-right ml-2"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Data Table ===== -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-800">Recent Orders</h3>
+    <div class="flex items-center gap-2">
+      <div id="bulkActions" class="hidden items-center gap-2 mr-4">
+        <span class="text-sm text-gray-600" id="selectedCount">0 selected</span>
+        <button onclick="deleteSelectedOrders()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium"><i class="fas fa-trash mr-1"></i>Delete</button>
+        <button onclick="exportSelectedOrders()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium"><i class="fas fa-file-export mr-1"></i>Export Selected</button>
+      </div>
+      <button class="text-white px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary)"><i class="fas fa-download mr-2"></i>Export All</button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th class="py-2 px-4 w-10"></th>
+          <th class="py-2 px-4 w-16"><input type="number" placeholder="No." class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4"><input type="text" placeholder="Order ID" class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4"><input type="text" placeholder="Customer" class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4"><input type="text" placeholder="Product" class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4"><input type="text" placeholder="Amount" class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4">
+            <select class="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white">
+              <option value="">All Status</option><option>Delivered</option><option>Processing</option><option>Shipped</option><option>Pending</option><option>Cancelled</option>
+            </select>
+          </th>
+          <th class="py-2 px-4"><input type="date" class="w-full text-xs border border-gray-300 rounded px-2 py-1"></th>
+          <th class="py-2 px-4">
+            <div class="flex space-x-1">
+              <button class="text-white px-2 py-1 rounded text-xs" style="background:var(--primary)" title="Apply"><i class="fas fa-search"></i></button>
+              <button class="bg-gray-500 text-white px-2 py-1 rounded text-xs" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+          </th>
+        </tr>
+        <tr class="border-b border-gray-200">
+          <th class="text-left py-3 px-4 w-10"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded"></th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600 w-16">Number</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Order ID</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Customer</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Product</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Amount</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Date</th>
+          <th class="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4"><input type="checkbox" class="row-checkbox w-4 h-4 rounded" onchange="updateSelectAll()"></td>
+          <td class="py-3 px-4 text-gray-500 font-medium">1</td>
+          <td class="py-3 px-4">#12345</td>
+          <td class="py-3 px-4">
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background:var(--primary)"></span> Active
+              <img src="https://ui-avatars.com/api/?name=John%20Doe&background=3B82F6&color=fff" class="w-8 h-8 rounded-full">
+              <span>John Doe</span>
             </div>
+          </td>
+          <td class="py-3 px-4">Premium Headphones</td>
+          <td class="py-3 px-4 font-semibold">$299.99</td>
+          <td class="py-3 px-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Delivered</span></td>
+          <td class="py-3 px-4 text-gray-600">2024-01-15</td>
+          <td class="py-3 px-4">
+            <button class="mr-2" style="color:var(--primary)"><i class="fas fa-eye"></i></button>
+            <button class="text-gray-600 hover:text-gray-800"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4"><input type="checkbox" class="row-checkbox w-4 h-4 rounded" onchange="updateSelectAll()"></td>
+          <td class="py-3 px-4 text-gray-500 font-medium">2</td>
+          <td class="py-3 px-4">#12346</td>
+          <td class="py-3 px-4">
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background:var(--secondary)"></span> Inactive
+              <img src="https://ui-avatars.com/api/?name=Jane%20Smith&background=10B981&color=fff" class="w-8 h-8 rounded-full">
+              <span>Jane Smith</span>
             </div>
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="py-3 px-4">Smart Watch</td>
+          <td class="py-3 px-4 font-semibold">$199.99</td>
+          <td class="py-3 px-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Processing</span></td>
+          <td class="py-3 px-4 text-gray-600">2024-01-14</td>
+          <td class="py-3 px-4">
+            <button class="mr-2" style="color:var(--primary)"><i class="fas fa-eye"></i></button>
+            <button class="text-gray-600 hover:text-gray-800"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4"><input type="checkbox" class="row-checkbox w-4 h-4 rounded" onchange="updateSelectAll()"></td>
+          <td class="py-3 px-4 text-gray-500 font-medium">3</td>
+          <td class="py-3 px-4">#12347</td>
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-2">
+              <img src="https://ui-avatars.com/api/?name=Mike%20Johnson&background=F59E0B&color=fff" class="w-8 h-8 rounded-full">
+              <span>Mike Johnson</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">Gaming Mouse</td>
+          <td class="py-3 px-4 font-semibold">$79.99</td>
+          <td class="py-3 px-4"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Shipped</span></td>
+          <td class="py-3 px-4 text-gray-600">2024-01-13</td>
+          <td class="py-3 px-4">
+            <button class="mr-2" style="color:var(--primary)"><i class="fas fa-eye"></i></button>
+            <button class="text-gray-600 hover:text-gray-800"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-      <#-- Recent Activities -->
-      <div class="tw-card p-6 mb-6">
-        <h3 class="font-semibold text-gray-700 mb-4">Recent Activities</h3>
-        <div class="space-y-3">
-          <div class="flex items-start gap-3 py-2 border-b border-gray-100">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--theme-light)">
-              <i class="fas fa-user-plus text-xs" style="color:var(--primary)"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-700">New user registered</p>
-              <p class="text-xs text-gray-400">Just now</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3 py-2 border-b border-gray-100">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--theme-light)">
-              <i class="fas fa-cog text-xs" style="color:var(--primary)"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-700">Settings updated</p>
-              <p class="text-xs text-gray-400">5 minutes ago</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3 py-2">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--theme-light)">
-              <i class="fas fa-shield-alt text-xs" style="color:var(--primary)"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-700">Permission synced</p>
-              <p class="text-xs text-gray-400">10 minutes ago</p>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="flex items-center justify-between mt-4">
+    <p class="text-sm text-gray-600">Showing 1 to 3 of 100 results</p>
+    <div class="flex space-x-1">
+      <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Previous</button>
+      <button class="px-3 py-2 text-white rounded-lg text-sm" style="background:var(--primary)">1</button>
+      <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">2</button>
+      <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">3</button>
+      <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Next</button>
+    </div>
+  </div>
+</div>
 
-      <#-- Recent Orders Data Table -->
-      <div class="tw-card p-0 overflow-hidden mb-6">
-        <div class="px-6 py-4 border-b flex items-center justify-between">
-          <h3 class="font-semibold text-gray-700" style="color:var(--primary)">Recent Orders</h3>
-          <span class="badge text-bg-primary">Latest</span>
-        </div>
-        <div class="p-4" style="overflow-x:auto">
-          <table class="table table-bordered table-hover align-middle">
-            <thead>
-              <tr>
-                <th></th>
-                <th>
-                  <form id="dash-search" method="GET">
-                    <select name="q_page_size" class="form-control form-control" style="min-width:70px" onchange="this.form.submit()">
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                    </select>
-                  </form>
-                </th>
-                <th><input type="text" form="dash-search" name="q_order" placeholder="Order ID" class="form-control" style="min-width:100px"></th>
-                <th><input type="text" form="dash-search" name="q_customer" placeholder="Customer" class="form-control" style="min-width:100px"></th>
-                <th>
-                  <div class="btn-group">
-                    <button form="dash-search" class="btn btn-sm btn-success"><i class="fas fa-search"></i></button>
-                    <a href="/admin/v1/dashboard" class="btn btn-sm btn-danger"><i class="fas fa-times"></i></a>
-                  </div>
-                </th>
-              </tr>
-              <tr>
-                <th><input type="checkbox" id="checkall"></th>
-                <th>No</th>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <form id="dash-selection" method="POST">
-                <input type="hidden" name="_csrf" value="${_csrf}">
-              </form>
-              <tr>
-                <td><input type="checkbox" form="dash-selection" name="selected[]" value="1"></td>
-                <td>1</td>
-                <td><span class="font-mono text-xs">#ORD-0001</span></td>
-                <td>Sample Customer</td>
-                <td>$99.00</td>
-                <td><i class="fas fa-check-circle text-green-500 text-xl"></i></td>
-                <td>
-                  <div class="btn-group">
-                    <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle-dd>Action</button>
-                    <div class="dropdown-menu dropdown-menu-end">
-                      <a class="dropdown-item" href="#"><i class="fas fa-eye"></i> View</a>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <nav class="mt-4"><ul class="pagination">
-            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-          </ul></nav>
-        </div>
-      </div>
     </main>
   </div>
 </div>
 <#include "/layouts/foot.ftl">
 <script>
-// Counter animation
-document.querySelectorAll('.counter').forEach(function(el) {
-  var target = parseInt(el.dataset.target) || 0;
-  var duration = 1000, step = target / (duration / 16);
-  var current = 0;
-  var timer = setInterval(function() {
-    current += step;
-    if (current >= target) { current = target; clearInterval(timer); }
-    el.textContent = Math.floor(current);
-  }, 16);
-});
-// Charts
-document.addEventListener('DOMContentLoaded', function() {
-  var primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3B82F6';
-  var secondary = getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim() || '#60A5FA';
+  // Date display
+  document.getElementById('dash-date').textContent = new Date().toISOString().slice(0,16).replace('T',' ');
 
-  new Chart(document.getElementById('lineChart'), {
-    type: 'line',
-    data: {
-      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-      datasets: [{
-        label: 'Users', data: [12,19,15,25,22,30,28,35,32,40,38,45],
-        borderColor: primary, backgroundColor: primary + '20',
-        tension: 0.4, fill: true
-      }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+  // Aksen tema dari CSS variables
+  var cs=getComputedStyle(document.documentElement); var THEME={primary:cs.getPropertyValue('--primary').trim()||'#3B82F6',secondary:cs.getPropertyValue('--secondary').trim()||'#60A5FA',light:cs.getPropertyValue('--theme-light').trim()||'#EFF6FF',dark:cs.getPropertyValue('--theme-dark').trim()||'#1E3A8A'};
+
+  // Counter animation
+  document.querySelectorAll('.counter').forEach(function(el){
+    var target = parseInt(el.getAttribute('data-target')), dur = 1500, step = target/(dur/16), cur = 0;
+    var t = setInterval(function(){ cur += step; if(cur>=target){cur=target; clearInterval(t);} el.textContent = Math.floor(cur).toLocaleString(); }, 16);
   });
 
-  new Chart(document.getElementById('doughnutChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Active','Inactive'],
-      datasets: [{ data: [${(stats.totalUsers)!80}, ${(stats.totalRoles)!20}], backgroundColor: [primary, secondary] }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+  // Sales chart (warna garis ikut tema)
+  new Chart(document.getElementById('salesChart').getContext('2d'), {
+    type:'line',
+    data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{ label:'Sales', data:[12,19,3,5,2,3,20], borderColor:THEME.primary, backgroundColor:'rgba(0,0,0,0.05)', borderWidth:3, fill:true, tension:0.4 }] },
+    options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true }, x:{ grid:{ display:false } } }, plugins:{ legend:{ display:false } } }
   });
-});
+
+  // Traffic chart (warna pertama ikut tema)
+  new Chart(document.getElementById('trafficChart').getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['Organic Search','Direct','Social Media','Email','Referral'], datasets:[{ data:[35,25,20,12,8], backgroundColor:[THEME.primary,'#10B981','#F59E0B','#EF4444','#8B5CF6'], borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ padding:20, usePointStyle:true } } } }
+  });
+
+  // Tabel: select all + bulk actions
+  function toggleSelectAll(){
+    var all = document.getElementById('selectAll');
+    document.querySelectorAll('.row-checkbox').forEach(function(c){ c.checked = all.checked; });
+    updateBulk();
+  }
+  function updateSelectAll(){
+    var all = document.getElementById('selectAll');
+    var boxes = document.querySelectorAll('.row-checkbox');
+    var checked = document.querySelectorAll('.row-checkbox:checked');
+    all.checked = checked.length === boxes.length;
+    all.indeterminate = checked.length > 0 && checked.length < boxes.length;
+    updateBulk();
+  }
+  function updateBulk(){
+    var checked = document.querySelectorAll('.row-checkbox:checked');
+    var bulk = document.getElementById('bulkActions');
+    var cnt = document.getElementById('selectedCount');
+    if(checked.length>0){ bulk.style.display='flex'; cnt.textContent = checked.length+' selected'; }
+    else { bulk.style.display='none'; }
+  }
+  function deleteSelectedOrders(){
+    var checked = document.querySelectorAll('.row-checkbox:checked');
+    if(!checked.length){ alert('Please select orders to delete.'); return; }
+    if(confirm('Delete '+checked.length+' selected orders? (sample only)')){
+      checked.forEach(function(cb){ cb.closest('tr').remove(); });
+      document.getElementById('selectAll').checked=false; updateBulk();
+    }
+  }
+  function exportSelectedOrders(){
+    var checked = document.querySelectorAll('.row-checkbox:checked');
+    if(!checked.length){ alert('Please select orders to export.'); return; }
+    alert(checked.length+' orders exported (sample only).');
+  }
 </script>
-<script>$("#checkall").click(function(){ $('input:checkbox').not(this).prop('checked', this.checked); });</script>
 </body>
 </html>

@@ -162,24 +162,37 @@ document.addEventListener('click', function(e) {
 <script>$(document).ready(function() { $('.select2').select2({ width: '100%' }); });</script>
 
 <#-- Trumbowyg rich text -->
-<script src="https://cdn.jsdelivr.net/npm/trumbowyg@2/dist/trumbowyg.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.21.0/trumbowyg.min.js" integrity="sha512-l6MMck8/SpFCgbJnIEfVsWQ8MaNK/n2ppTiELW3I2BFY5pAm/WjkNHSt+2OD7+CZtygs+jr+dAgzNdjNuCU7kw==" crossorigin="anonymous"></script>
 <script src="/be/default/vendor/trumbowyg/filemanager.js"></script>
 <script>
-$(document).ready(function() {
-  $('.trumbowyg-editor').trumbowyg({
-    btns: [
-      ['viewHTML'],['formatting'],['bold','italic','underline','strikethrough'],
-      ['unorderedList','orderedList'],['link'],['insertImage'],['fullscreen']
-    ],
-    autogrow: true,
-    resetCss: true
-  });
-  $('form').on('submit', function() {
-    $('.trumbowyg-editor').each(function() {
-      try { $(this).trumbowyg('syncTextarea'); } catch(err) {}
+(function () {
+    if (!(window.jQuery && jQuery.fn.trumbowyg)) return;
+    $('.trumbowyg').trumbowyg();
+    $('.trumbowyg-editor').trumbowyg({
+        btns: [
+            ['viewHTML'],
+            ['formatting'],
+            ['strong', 'em', 'del'],
+            ['superscript', 'subscript'],
+            ['link'],
+            ['filemanager'],
+            ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+            ['unorderedList', 'orderedList'],
+            ['horizontalRule'],
+            ['removeformat'],
+            ['fullscreen']
+        ],
+        semantic: { div: 'div' },
+        removeformatPasted: true,
+        autogrow: true,
+        plugins: { filemanager: true }
     });
-  });
-});
+    $('form').on('submit', function () {
+        $(this).find('.trumbowyg, .trumbowyg-editor').each(function () {
+            if ($(this).data('trumbowyg')) $(this).val($(this).trumbowyg('html'));
+        });
+    });
+})();
 </script>
 
 <#-- Chart.js -->

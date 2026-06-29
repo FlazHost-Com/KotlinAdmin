@@ -1,8 +1,6 @@
 package com.kotlinadmin.modules.media.services
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 
 class MediaService(private val uploadDir: String = "uploads/media") : IMediaService {
 

@@ -15,9 +15,12 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
+      </div>
       <div class="tw-card p-6 max-w-3xl mx-auto">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold" style="color:var(--primary)">Create User</h2>
+          <h2 class="text-lg font-semibold" style="color:var(--primary)">User Form</h2>
           <a href="/admin/v1/access/user" class="btn btn-light btn-sm">
             <i class="fas fa-arrow-left"></i> Back
           </a>
@@ -62,10 +65,10 @@
             </div>
             <div>
               <label class="form-label">[password_confirm] Confirm Password</label>
-              <input type="password" name="passwordConfirm"
-                     class="form-control <#if (errors.passwordConfirm)??>is-invalid</#if>"
+              <input type="password" name="password_confirmation"
+                     class="form-control <#if (errors.password_confirmation)??>is-invalid</#if>"
                      placeholder="Repeat password" required>
-              <#if (errors.passwordConfirm)??><div class="invalid-feedback">${errors.passwordConfirm}</div></#if>
+              <#if (errors.password_confirmation)??><div class="invalid-feedback">${errors.password_confirmation}</div></#if>
             </div>
             <div>
               <label class="form-label">[status] Status</label>
@@ -86,14 +89,29 @@
             </div>
             <div class="md:col-span-2">
               <label class="form-label">[roles] Roles</label>
-              <select name="roleIds[]" multiple class="form-control select2" <#if (errors.roleIds)??>style="border-color:red"</#if>>
-                <#if allRoles??>
-                  <#list allRoles as role>
-                    <option value="${role.id}">${role.name}</option>
+              <div class="d-flex flex-wrap gap-3 p-2 rounded border">
+                <#if roles??>
+                  <#list roles as role>
+                    <label class="d-flex align-items-center gap-2">
+                      <input type="checkbox" name="roles[]" value="${role.id}" class="w-4 h-4">
+                      <span>${role.name}</span>
+                    </label>
                   </#list>
                 </#if>
-              </select>
-              <#if (errors.roleIds)??><div class="invalid-feedback">${errors.roleIds}</div></#if>
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="form-label fw-semibold d-block">Blocked</label>
+              <div class="d-flex flex-wrap gap-3 p-2 rounded border">
+                <label class="d-flex align-items-center gap-2">
+                  <input id="blocked" type="checkbox" name="blocked" value="1" class="w-4 h-4">
+                  <span>Block account</span>
+                </label>
+              </div>
+            </div>
+            <div class="md:col-span-2" id="div_blocked_reason">
+              <label class="form-label fw-semibold">Blocked Reason</label>
+              <input id="blocked_reason" type="text" name="blocked_reason" class="form-control" value="">
             </div>
             <div class="md:col-span-2">
               <label class="form-label">[picture] Picture</label>
@@ -108,7 +126,7 @@
             <button type="submit" class="btn btn-primary">
               <i class="fas fa-save"></i> Save User
             </button>
-            <a href="/admin/v1/access/user" class="btn btn-light">Cancel</a>
+            <a href="/admin/v1/access/user" class="btn btn-danger">Cancel</a>
           </div>
         </form>
       </div>

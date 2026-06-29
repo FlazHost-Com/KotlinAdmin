@@ -167,7 +167,12 @@ class UserServiceTest : DescribeSpec({
     describe("UserService.index") {
         it("returns paginated results") {
             val result = runBlocking {
-                service.index(Parameters.build { append("page", "1"); append("page_size", "10") })
+                service.index(
+                    Parameters.build {
+                        append("page", "1")
+                        append("page_size", "10")
+                    }
+                )
             }
             result.paginateData.page shouldBe 1
         }

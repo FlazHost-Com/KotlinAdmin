@@ -30,11 +30,11 @@ data class ThemeData(
 }
 
 val THEMES: List<ThemeData> = listOf(
-    ThemeData("Blue",   "#3B82F6", "#1D4ED8", "#EFF6FF", "#1E3A5F"),
+    ThemeData("Blue", "#3B82F6", "#1D4ED8", "#EFF6FF", "#1E3A5F"),
     ThemeData("Purple", "#8B5CF6", "#6D28D9", "#F5F3FF", "#4C1D95"),
-    ThemeData("Green",  "#10B981", "#065F46", "#ECFDF5", "#064E3B"),
+    ThemeData("Green", "#10B981", "#065F46", "#ECFDF5", "#064E3B"),
     ThemeData("Orange", "#F59E0B", "#B45309", "#FFFBEB", "#78350F"),
-    ThemeData("Red",    "#EF4444", "#B91C1C", "#FEF2F2", "#7F1D1D")
+    ThemeData("Red", "#EF4444", "#B91C1C", "#FEF2F2", "#7F1D1D")
 )
 
 fun getTheme(name: String): ThemeData =

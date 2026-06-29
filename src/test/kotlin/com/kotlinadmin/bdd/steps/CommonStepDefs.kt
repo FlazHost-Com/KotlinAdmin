@@ -1,5 +1,6 @@
 package com.kotlinadmin.bdd.steps
 
+import com.kotlinadmin.module
 import io.cucumber.java.After
 import io.cucumber.java.Before
 import io.cucumber.java.en.And
@@ -8,7 +9,6 @@ import io.cucumber.java.en.When
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.TestApplication
-import com.kotlinadmin.module
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

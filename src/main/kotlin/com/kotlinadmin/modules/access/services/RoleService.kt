@@ -31,8 +31,9 @@ class RoleService : IRoleService {
     }
 
     override suspend fun store(dto: RoleDto, actorId: String): RoleEntity = dbQuery {
-        if (RoleEntity.find { Roles.name eq dto.name }.firstOrNull() != null)
+        if (RoleEntity.find { Roles.name eq dto.name }.firstOrNull() != null) {
             throw ConflictError("Role name already exists")
+        }
 
         val now = Instant.now()
         RoleEntity.new(UUID.randomUUID().toString()) {

@@ -1,8 +1,8 @@
 package com.kotlinadmin.config
 
 import com.kotlinadmin.modules.access.models.Permissions
-import com.kotlinadmin.modules.access.models.RolesPermissions
 import com.kotlinadmin.modules.access.models.Roles
+import com.kotlinadmin.modules.access.models.RolesPermissions
 import com.kotlinadmin.modules.access.models.Users
 import com.kotlinadmin.modules.access.models.UsersRoles
 import com.kotlinadmin.modules.setting.models.Settings

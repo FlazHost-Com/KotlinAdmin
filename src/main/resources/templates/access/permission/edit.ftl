@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <#include "/layouts/head.ftl">
-  <title>${setting.name!"KotlinAdmin"} - Edit Permission</title>
+  <title>${setting.name!"KotlinAdmin"} - Permission</title>
 </head>
 <body class="bg-gray-100">
 <div class="flex h-screen overflow-hidden">
@@ -15,49 +15,52 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
-      <div class="tw-card p-6 max-w-2xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold" style="color:var(--primary)">Edit Permission</h2>
-          <a href="/admin/v1/access/permission" class="btn btn-light btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
-          </a>
-        </div>
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Permission Management</h1>
+      </div>
+      <div class="tw-card p-6">
+        <h2 class="text-lg font-bold mb-4" style="color:var(--primary)">Permission Form</h2>
+        <#if flash??><#include "/layouts/flash.ftl"></#if>
         <form method="POST" action="/admin/v1/access/permission/${data.id}/update?_method=PUT&_csrf=${_csrf}">
-          <div class="mb-4">
-            <label class="form-label">[name] Name</label>
-            <input type="text" name="name" value="${(old.name)!(data.name)!""}"
-                   class="form-control <#if (errors.name)??>is-invalid</#if>"
-                   placeholder="admin.v1.access.permission.index" required>
-            <div class="form-text text-gray-400">Dot-notation: <code>{guard}.{module}.{resource}.{action}</code></div>
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">Name</label>
+            <input id="name" type="text" class="form-control <#if (errors.name)??>is-invalid</#if>" name="name" value="${(old.name)!(data.name)!""}">
             <#if (errors.name)??><div class="invalid-feedback">${errors.name}</div></#if>
           </div>
-          <div class="mb-4">
-            <label class="form-label">[method] HTTP Method</label>
-            <select name="method" class="form-control <#if (errors.method)??>is-invalid</#if>">
-              <option value="GET" <#if ((old.method)!(data.method)!"GET") == "GET">selected</#if>>GET</option>
+          <div class="mb-3">
+            <label for="guard_name" class="form-label fw-semibold">Guard</label>
+            <select name="guard_name" id="guard_name" class="form-control">
+              <option value="web" <#if ((old.guard_name)!(data.guard_name)!"web") == "web">selected</#if>>web</option>
+              <option value="api" <#if ((old.guard_name)!(data.guard_name)!"") == "api">selected</#if>>api</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="method" class="form-label fw-semibold">Method</label>
+            <select id="method" name="method" class="form-control <#if (errors.method)??>is-invalid</#if>">
+              <option value="">-- Select Method --</option>
+              <option value="GET" <#if ((old.method)!(data.method)!"") == "GET">selected</#if>>GET</option>
               <option value="POST" <#if ((old.method)!(data.method)!"") == "POST">selected</#if>>POST</option>
               <option value="PUT" <#if ((old.method)!(data.method)!"") == "PUT">selected</#if>>PUT</option>
+              <option value="PATCH" <#if ((old.method)!(data.method)!"") == "PATCH">selected</#if>>PATCH</option>
               <option value="DELETE" <#if ((old.method)!(data.method)!"") == "DELETE">selected</#if>>DELETE</option>
             </select>
             <#if (errors.method)??><div class="invalid-feedback">${errors.method}</div></#if>
           </div>
-          <div class="mb-4">
-            <label class="form-label">[guard_name] Guard</label>
-            <select name="guardName" class="form-control">
-              <option value="web" <#if ((old.guardName)!(data.guardName)!"web") == "web">selected</#if>>web</option>
-              <option value="api" <#if ((old.guardName)!(data.guardName)!"") == "api">selected</#if>>api</option>
+          <div class="mb-3">
+            <label for="status" class="form-label fw-semibold">Status</label>
+            <select name="status" id="status" class="form-control" required>
+              <option value="Active" <#if ((old.status)!(data.status)!"Active") == "Active">selected</#if>>Active</option>
+              <option value="Inactive" <#if ((old.status)!(data.status)!"") == "Inactive">selected</#if>>Inactive</option>
             </select>
           </div>
-          <div class="mb-6">
-            <label class="form-label">[path] Route Path</label>
-            <input type="text" name="path" value="${(old.path)!(data.path)!""}"
-                   class="form-control <#if (errors.path)??>is-invalid</#if>"
-                   placeholder="/admin/v1/access/permission">
-            <#if (errors.path)??><div class="invalid-feedback">${errors.path}</div></#if>
+          <div class="mb-4">
+            <label for="desc" class="form-label fw-semibold">Description</label>
+            <input id="desc" type="text" class="form-control <#if (errors.desc)??>is-invalid</#if>" name="desc" value="${(old.desc)!(data.description)!""}">
+            <#if (errors.desc)??><div class="invalid-feedback">${errors.desc}</div></#if>
           </div>
-          <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Permission</button>
-            <a href="/admin/v1/access/permission" class="btn btn-light">Cancel</a>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary-tw px-4 py-2"><i class="fas fa-save me-1"></i> Save</button>
+            <a href="/admin/v1/access/permission" class="btn btn-danger px-4 py-2 text-white">Back</a>
           </div>
         </form>
       </div>

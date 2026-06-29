@@ -34,7 +34,9 @@ data class AppConfig(
 
             if (appMode == "production") {
                 require(jwtSecret != DEFAULT_JWT_SECRET) { "JWT_SECRET must be changed from default in production" }
-                require(sessionSecret != DEFAULT_SESSION_SECRET) { "SESSION_SECRET must be changed from default in production" }
+                require(
+                    sessionSecret != DEFAULT_SESSION_SECRET
+                ) { "SESSION_SECRET must be changed from default in production" }
             }
 
             return AppConfig(

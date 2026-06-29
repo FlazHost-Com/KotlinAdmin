@@ -15,145 +15,123 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Permission Management</h1>
+      </div>
       <div class="tw-card p-0 overflow-hidden">
         <div class="px-6 py-4 border-b flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold" style="color:var(--primary)">Permissions for Role: ${role.name!""}</h2>
-            <p class="text-gray-400 text-sm mt-0.5">Assign or unassign permissions for this role</p>
+          <h2 class="text-lg font-bold" style="color:var(--primary)">Permission List</h2>
+          <div class="btn-group btn-sm">
+            <button class="btn btn-info btn-sm" form="selection"
+                    formaction="/admin/v1/access/role/${role.id}/permission/assign_selected?_csrf=${_csrf}"
+                    data-confirm="Confirm Assign">
+              <i class="fas fa-fw fa-check"></i> Assign Selected
+            </button>
+            <button class="btn btn-danger btn-sm" form="selection"
+                    formaction="/admin/v1/access/role/${role.id}/permission/unassign_selected?_csrf=${_csrf}"
+                    data-confirm="Confirm Unassign">
+              <i class="fas fa-fw fa-times"></i> Unassign Selected
+            </button>
           </div>
-          <div class="flex gap-2">
-            <a href="/admin/v1/access/role" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
-          </div>
-        </div>
-
-        <#-- Bulk actions -->
-        <div class="px-6 py-3 border-b bg-gray-50 flex gap-2">
-          <button class="btn btn-success btn-sm" form="assign-selection"
-                  formaction="/admin/v1/access/role/${role.id}/permission/assign_selected?_csrf=${_csrf}"
-                  data-confirm="Assign selected permissions?">
-            <i class="fas fa-plus-circle"></i> Assign Selected
-          </button>
-          <button class="btn btn-danger btn-sm" form="unassign-selection"
-                  formaction="/admin/v1/access/role/${role.id}/permission/unassign_selected?_csrf=${_csrf}"
-                  data-confirm="Unassign selected permissions?">
-            <i class="fas fa-minus-circle"></i> Unassign Selected
-          </button>
         </div>
 
         <div class="p-4" style="overflow-x:auto">
           <table class="table table-bordered table-hover align-middle">
             <thead>
-              <tr>
-                <th></th>
-                <th>
-                  <form id="searchform" method="GET" action="/admin/v1/access/role/${role.id}/permission">
-                    <input type="hidden" name="roleId" value="${role.id}">
-                    <select name="q_page_size" class="form-control" style="min-width:70px" onchange="this.form.submit()">
+              <form id="searchform" method="GET" action="/admin/v1/access/role/${role.id}/permission">
+                <tr>
+                  <th width="2%"></th>
+                  <th width="7%">
+                    <select name="q_page_size" class="form-control" onchange="this.form.submit()">
                       <option value="10" <#if (filter.q_page_size!"10") == "10">selected</#if>>10</option>
                       <option value="20" <#if (filter.q_page_size!"") == "20">selected</#if>>20</option>
                       <option value="50" <#if (filter.q_page_size!"") == "50">selected</#if>>50</option>
+                      <option value="100" <#if (filter.q_page_size!"") == "100">selected</#if>>100</option>
                     </select>
-                  </form>
-                </th>
-                <th><input type="text" form="searchform" name="q_name" value="${(filter.q_name)!""}" placeholder="Name" class="form-control" style="min-width:120px"></th>
-                <th>
-                  <select form="searchform" name="q_status" class="form-control" style="min-width:100px">
-                    <option value="">All</option>
-                    <option value="Active" <#if (filter.q_status!"") == "Active">selected</#if>>Assigned</option>
-                    <option value="Inactive" <#if (filter.q_status!"") == "Inactive">selected</#if>>Not Assigned</option>
-                  </select>
-                </th>
-                <th>
-                  <select form="searchform" name="q_guard" class="form-control" style="min-width:80px">
-                    <option value="">All Guard</option>
-                    <option value="web" <#if (filter.q_guard!"") == "web">selected</#if>>web</option>
-                    <option value="api" <#if (filter.q_guard!"") == "api">selected</#if>>api</option>
-                  </select>
-                </th>
-                <th></th>
-                <th>
-                  <div class="btn-group">
-                    <button form="searchform" class="btn btn-sm btn-success"><i class="fas fa-search"></i></button>
-                    <a href="/admin/v1/access/role/${role.id}/permission" class="btn btn-sm btn-danger"><i class="fas fa-times"></i></a>
-                  </div>
-                </th>
-              </tr>
-              <tr>
-                <th><input type="checkbox" id="checkall"></th>
-                <th>No</th>
-                <th>Name</th>
-                <th>Assigned</th>
-                <th>Guard</th>
-                <th>Method</th>
-                <th>Action</th>
-              </tr>
+                  </th>
+                  <th width="20%"><input type="text" id="q_name" name="q_name" value="${(filter.q_name)!""}" placeholder="Name" class="form-control"></th>
+                  <th width="10%">
+                    <select name="q_status" class="form-control">
+                      <option disabled <#if !(filter.q_status)?? || (filter.q_status!"") == "">selected</#if>>Select</option>
+                      <option value="Active" <#if (filter.q_status!"") == "Active">selected</#if>>Active</option>
+                      <option value="Inactive" <#if (filter.q_status!"") == "Inactive">selected</#if>>Inactive</option>
+                    </select>
+                  </th>
+                  <th width="15%"><input type="text" id="q_desc" name="q_desc" value="${(filter.q_desc)!""}" placeholder="Description" class="form-control"></th>
+                  <th width="5%" class="text-center align-middle">
+                    <div class="btn-group">
+                      <button form="searchform" type="submit" class="btn btn-sm btn-success"><i class="fas fa-fw fa-search"></i></button>
+                      <a href="/admin/v1/access/role/${role.id}/permission" class="btn btn-sm btn-danger"><i class="fas fa-fw fa-times"></i></a>
+                    </div>
+                  </th>
+                </tr>
+                <tr>
+                  <th width="5%"><input type="checkbox" id="checkall"></th>
+                  <th width="5%">No</th>
+                  <th width="20%">Name</th>
+                  <th width="15%">Status</th>
+                  <th width="10%">Description</th>
+                  <th width="5%">Action</th>
+                </tr>
+              </form>
             </thead>
             <tbody>
-              <form id="assign-selection" method="POST"><input type="hidden" name="_csrf" value="${_csrf}"></form>
-              <form id="unassign-selection" method="POST"><input type="hidden" name="_csrf" value="${_csrf}"></form>
+              <form id="selection" method="POST">
+                <input type="hidden" name="_csrf" value="${_csrf}">
+              </form>
               <#if datas?? && datas?size gt 0>
                 <#list datas as item>
                 <tr>
-                  <td>
-                    <input type="checkbox" form="assign-selection" name="selected[]" value="${item.id}"
-                           <#if item.assigned!false>form="unassign-selection"</#if>>
-                  </td>
+                  <td><input type="checkbox" form="selection" name="selected[]" value="${item.id}"></td>
                   <td>${(paginate_data.page - 1) * paginate_data.pageSize + item?index + 1}</td>
-                  <td class="text-xs font-mono">${item.name!""}</td>
-                  <td>
+                  <td>${item.name!""}</td>
+                  <td class="text-left">
                     <#if item.assigned!false>
-                      <i class="fas fa-check-circle text-blue-500 text-xl" title="Assigned"></i>
+                      <i class="fas fa-check-circle text-green-500 text-xl" title="Assigned"></i>
                     <#else>
                       <i class="fas fa-times-circle text-gray-300 text-xl" title="Not assigned"></i>
                     </#if>
                   </td>
-                  <td><span class="badge <#if (item.guardName!"web") == "api">text-bg-warning<#else>text-bg-info</#if>">${item.guardName!"web"}</span></td>
-                  <td><span class="badge text-bg-success">${item.method!""}</span></td>
-                  <td>
-                    <div class="btn-group relative">
-                      <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle-dd>Action</button>
+                  <td>${item.description!""}</td>
+                  <td class="text-center">
+                    <div class="btn-group">
+                      <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle-dd aria-expanded="false">Action</button>
                       <div class="dropdown-menu dropdown-menu-end">
-                        <#if !(item.assigned!false)>
-                          <a class="dropdown-item text-green-700"
-                             href="/admin/v1/access/role/${role.id}/permission/${item.id}/assign">
-                            <i class="fas fa-plus-circle"></i> Assign
-                          </a>
-                        <#else>
-                          <a class="dropdown-item text-red-600"
-                             href="/admin/v1/access/role/${role.id}/permission/${item.id}/unassign">
-                            <i class="fas fa-minus-circle"></i> Unassign
-                          </a>
-                        </#if>
+                        <a class="dropdown-item" href="/admin/v1/access/role/${role.id}/permission/${item.id}/assign">
+                          <i class="fas fa-check fa-fw"></i> Assign
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item danger" href="/admin/v1/access/role/${role.id}/permission/${item.id}/unassign">
+                          <i class="fas fa-times fa-fw"></i> Unassign
+                        </a>
                       </div>
                     </div>
                   </td>
                 </tr>
                 </#list>
               <#else>
-                <tr><td colspan="7" class="text-center text-gray-400 py-8">No permissions found</td></tr>
+                <tr><td colspan="6" class="text-center text-gray-400 py-4">No permissions found.</td></tr>
               </#if>
             </tbody>
           </table>
           <#if paginate_data??>
-          <nav class="mt-4">
-            <ul class="pagination">
-              <li class="page-item <#if !paginate_data.hasPrev>disabled</#if>">
-                <a class="page-link" href="?q_page=${paginate_data.page - 1}&q_page_size=${(filter.q_page_size)!"10"}">Previous</a>
-              </li>
-              <#list 1..paginate_data.totalPages as p>
-                <#if p == 1 || p == paginate_data.totalPages || (p >= paginate_data.page - 2 && p <= paginate_data.page + 2)>
+          <div class="d-flex justify-content-end mt-4">
+            <nav>
+              <ul class="pagination">
+                <#if paginate_data.hasPrev>
+                <li class="page-item"><a class="page-link" href="?q_page=${paginate_data.page - 1}&q_page_size=${(filter.q_page_size)!"10"}">Previous</a></li>
+                </#if>
+                <#list 1..paginate_data.totalPages as p>
                   <li class="page-item <#if p == paginate_data.page>active</#if>">
                     <a class="page-link" href="?q_page=${p}&q_page_size=${(filter.q_page_size)!"10"}">${p}</a>
                   </li>
-                <#elseif p == 2 || p == paginate_data.totalPages - 1>
-                  <li class="page-item disabled"><a class="page-link" href="#">…</a></li>
+                </#list>
+                <#if paginate_data.hasNext>
+                <li class="page-item"><a class="page-link" href="?q_page=${paginate_data.page + 1}&q_page_size=${(filter.q_page_size)!"10"}">Next</a></li>
                 </#if>
-              </#list>
-              <li class="page-item <#if !paginate_data.hasNext>disabled</#if>">
-                <a class="page-link" href="?q_page=${paginate_data.page + 1}&q_page_size=${(filter.q_page_size)!"10"}">Next</a>
-              </li>
-            </ul>
-          </nav>
+              </ul>
+            </nav>
+          </div>
           </#if>
         </div>
       </div>
@@ -161,8 +139,6 @@
   </div>
 </div>
 <#include "/layouts/foot.ftl">
-<script>$("#checkall").click(function(){
-  $('input:checkbox').not(this).prop('checked', this.checked);
-});</script>
+<script>$("#checkall").click(function(){ $('input:checkbox').not(this).prop('checked', this.checked); });</script>
 </body>
 </html>

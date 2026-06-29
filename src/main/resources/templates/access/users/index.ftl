@@ -15,6 +15,9 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
+      </div>
       <div class="tw-card p-0 overflow-hidden">
         <div class="px-6 py-4 border-b flex items-center justify-between">
           <h2 class="text-lg font-semibold" style="color:var(--primary)">User List</h2>
@@ -117,7 +120,7 @@
                         </a>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item text-danger" form="delete-${item.id}"
-                                data-confirm="Delete user ${item.name!item.id}?">
+                                data-confirm="Confirm Delete">
                           <i class="fas fa-trash"></i> Delete
                         </button>
                       </div>

@@ -26,7 +26,9 @@ import com.kotlinadmin.modules.components.routes.componentsModule
 import com.kotlinadmin.modules.dashboard.routes.dashboardModule
 import com.kotlinadmin.modules.home.routes.homeModule
 import com.kotlinadmin.modules.media.routes.mediaModule
+import com.kotlinadmin.modules.profile.routes.profileApiModule
 import com.kotlinadmin.modules.profile.routes.profileModule
+import com.kotlinadmin.modules.setting.routes.settingApiModule
 import com.kotlinadmin.modules.setting.routes.settingModule
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -40,6 +42,7 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.session
 import io.ktor.server.freemarker.FreeMarker
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.gzip
@@ -56,7 +59,6 @@ import io.ktor.server.sessions.cookie
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
-import io.ktor.server.http.content.staticResources
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -130,8 +132,11 @@ fun Application.module() {
             verifier(jwtVerifier)
             validate { credential ->
                 val jti = credential.payload.id
-                if (jti != null && RedisManager.isBlacklisted(jti)) null
-                else JWTPrincipal(credential.payload)
+                if (jti != null && RedisManager.isBlacklisted(jti)) {
+                    null
+                } else {
+                    JWTPrincipal(credential.payload)
+                }
             }
             challenge { _, _ ->
                 call.respondError(HttpStatusCode.Unauthorized, "Invalid or expired token")
@@ -210,11 +215,13 @@ fun Application.module() {
     }
 
     install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = false
-            isLenient = true
-            ignoreUnknownKeys = true
-        })
+        json(
+            Json {
+                prettyPrint = false
+                isLenient = true
+                ignoreUnknownKeys = true
+            }
+        )
     }
 
     if (appConfig.isFullMode) {
@@ -231,10 +238,12 @@ fun Application.module() {
     configureRouting(appConfig)
 
     val shutdownLog = environment.log
-    Runtime.getRuntime().addShutdownHook(Thread {
-        shutdownLog.info("Shutting down KotlinAdmin...")
-        RedisManager.close()
-    })
+    Runtime.getRuntime().addShutdownHook(
+        Thread {
+            shutdownLog.info("Shutting down KotlinAdmin...")
+            RedisManager.close()
+        }
+    )
 }
 
 fun Application.configureRouting(config: AppConfig) {
@@ -254,5 +263,7 @@ fun Application.configureRouting(config: AppConfig) {
         }
 
         accessApiModule()
+        profileApiModule()
+        settingApiModule()
     }
 }

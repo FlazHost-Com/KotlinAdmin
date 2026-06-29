@@ -3,10 +3,10 @@ package com.kotlinadmin.modules.access.routes
 import com.kotlinadmin.core.helpers.respondJson
 import com.kotlinadmin.core.helpers.respondView
 import com.kotlinadmin.core.routing.*
-import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.core.session.withErrors
-import com.kotlinadmin.modules.access.dto.PermissionDto
+import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.modules.access.dto.DeleteSelectedDto
+import com.kotlinadmin.modules.access.dto.PermissionDto
 import com.kotlinadmin.modules.access.models.toMap
 import com.kotlinadmin.modules.access.services.IPermissionService
 import io.ktor.http.*
@@ -33,11 +33,14 @@ fun Application.accessPermissionWebModule() {
 
                 val params = call.request.queryParameters
                 val result = permissionService.index(params)
-                call.respondView("access/permission/index.ftl", mapOf(
-                    "datas" to result.items,
-                    "paginate_data" to result.paginateData,
-                    "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
-                ))
+                call.respondView(
+                    "access/permission/index.ftl",
+                    mapOf(
+                        "datas" to result.items,
+                        "paginate_data" to result.paginateData,
+                        "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
+                    )
+                )
             }
 
             namedGet("admin.v1.access.permission.create", "/create") {
@@ -61,17 +64,31 @@ fun Application.accessPermissionWebModule() {
                 if (name.isBlank()) errors["name"] = "Name is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf(
-                        "name" to name, "method" to method, "status" to status, "description" to description
-                    )))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf(
+                                "name" to name,
+                                "method" to method,
+                                "status" to status,
+                                "description" to description
+                            )
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/permission/create")
                     return@namedPost
                 }
 
-                permissionService.store(PermissionDto(
-                    name = name, method = method.ifBlank { null }, status = status,
-                    description = description.ifBlank { null }, guardName = guardName
-                ), session.userId)
+                permissionService.store(
+                    PermissionDto(
+                        name = name,
+                        method = method.ifBlank { null },
+                        status = status,
+                        description = description.ifBlank { null },
+                        guardName = guardName
+                    ),
+                    session.userId
+                )
                 call.sessions.set(session.withFlash("success", "Create Permission Success."))
                 call.respondRedirect("/admin/v1/access/permission")
             }
@@ -100,17 +117,32 @@ fun Application.accessPermissionWebModule() {
                 if (name.isBlank()) errors["name"] = "Name is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf(
-                        "name" to name, "method" to method, "status" to status, "description" to description
-                    )))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf(
+                                "name" to name,
+                                "method" to method,
+                                "status" to status,
+                                "description" to description
+                            )
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/permission/$id/edit")
                     return@namedPut
                 }
 
-                permissionService.update(id, PermissionDto(
-                    name = name, method = method.ifBlank { null }, status = status,
-                    description = description.ifBlank { null }, guardName = guardName
-                ), session.userId)
+                permissionService.update(
+                    id,
+                    PermissionDto(
+                        name = name,
+                        method = method.ifBlank { null },
+                        status = status,
+                        description = description.ifBlank { null },
+                        guardName = guardName
+                    ),
+                    session.userId
+                )
                 call.sessions.set(session.withFlash("success", "Update Permission Success."))
                 call.respondRedirect("/admin/v1/access/permission")
             }
@@ -152,14 +184,22 @@ fun Application.accessPermissionApiModule() {
                     permissionService.syncFromRouteRegistry()
                     val params = call.request.queryParameters
                     val result = permissionService.index(params)
-                    call.respondJson(data = mapOf("data" to result.items, "pagination" to result.paginateData))
+                    call.respondJson(
+                        data = mapOf(
+                            "data" to result.items.map { it.toMap() },
+                            "pagination" to result.paginateData.toMap()
+                        )
+                    )
                 }
 
                 namedPost("api.v1.access.permission.store", "/store") {
                     val principal = call.principal<JWTPrincipal>()!!
                     val dto = call.receive<PermissionDto>()
                     val perm = permissionService.store(dto, principal.subject!!)
-                    call.respondJson(HttpStatusCode.Created, data = mapOf("message" to "Permission created", "data" to perm.toMap()))
+                    call.respondJson(
+                        HttpStatusCode.Created,
+                        data = mapOf("message" to "Permission created", "data" to perm.toMap())
+                    )
                 }
 
                 namedGet("api.v1.access.permission.edit", "/{id}/edit") {
@@ -185,7 +225,12 @@ fun Application.accessPermissionApiModule() {
                 namedPost("api.v1.access.permission.delete_selected", "/delete_selected") {
                     val dto = call.receive<DeleteSelectedDto>()
                     permissionService.deleteSelected(dto.selected)
-                    call.respondJson(data = mapOf("message" to "${dto.selected.size} permission(s) deleted", "count" to dto.selected.size))
+                    call.respondJson(
+                        data = mapOf(
+                            "message" to "${dto.selected.size} permission(s) deleted",
+                            "count" to dto.selected.size
+                        )
+                    )
                 }
             }
         }

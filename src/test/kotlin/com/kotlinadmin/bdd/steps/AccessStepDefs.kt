@@ -43,12 +43,12 @@ class AccessStepDefs {
             header(HttpHeaders.Cookie, SharedTestState.sessionCookies)
             setBody(
                 "code=${code.encodeURLParameter()}" +
-                "&name=Test+User" +
-                "&email=${email.encodeURLParameter()}" +
-                "&password=password123" +
-                "&passwordConfirm=password123" +
-                "&status=Active" +
-                "&timezone=UTC"
+                    "&name=Test+User" +
+                    "&email=${email.encodeURLParameter()}" +
+                    "&password=password123" +
+                    "&passwordConfirm=password123" +
+                    "&status=Active" +
+                    "&timezone=UTC"
             )
         }
         SharedTestState.createdUserIds.add(email)

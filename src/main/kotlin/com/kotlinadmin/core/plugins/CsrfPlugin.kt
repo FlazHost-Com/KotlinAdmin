@@ -4,7 +4,6 @@ import com.kotlinadmin.core.errors.ForbiddenError
 import com.kotlinadmin.core.session.UserSession
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.request.receiveParameters
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import java.security.MessageDigest

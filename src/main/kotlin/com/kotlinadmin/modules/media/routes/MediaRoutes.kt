@@ -15,7 +15,11 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.get
 
 private val ALLOWED_MIME = setOf(
-    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif"
 )
 private const val MAX_SIZE = 2 * 1024 * 1024L // 2MB
 
@@ -27,7 +31,9 @@ fun Application.mediaModule() {
         namedGet("admin.v1.media.list", "/admin/v1/media/list") {
             call.requireAuthenticated()
             val files = mediaService.list()
-            call.respondJson(data = files.map { mapOf("key" to it.key, "url" to it.url, "name" to it.name, "size" to it.size) })
+            call.respondJson(
+                data = files.map { mapOf("key" to it.key, "url" to it.url, "name" to it.name, "size" to it.size) }
+            )
         }
 
         // POST /admin/v1/media/upload — CSRF via x-csrf-token header or body
@@ -62,11 +68,13 @@ fun Application.mediaModule() {
             if (errorMsg != null) {
                 call.respondError(HttpStatusCode.UnprocessableEntity, errorMsg!!)
             } else if (fileInfo != null) {
-                call.respondJson(data = mapOf(
-                    "key" to fileInfo!!.key,
-                    "url" to fileInfo!!.url,
-                    "name" to fileInfo!!.name
-                ))
+                call.respondJson(
+                    data = mapOf(
+                        "key" to fileInfo!!.key,
+                        "url" to fileInfo!!.url,
+                        "name" to fileInfo!!.name
+                    )
+                )
             } else {
                 call.respondError(HttpStatusCode.BadRequest, "No file uploaded.")
             }

@@ -3,18 +3,17 @@ package com.kotlinadmin.modules.auth.routes
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.kotlinadmin.config.AppConfig
-import com.kotlinadmin.core.errors.UnauthorizedError
 import com.kotlinadmin.core.helpers.respondJson
 import com.kotlinadmin.core.helpers.respondView
 import com.kotlinadmin.core.routing.namedGet
 import com.kotlinadmin.core.routing.namedPost
 import com.kotlinadmin.core.session.UserSession
-import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.core.session.withErrors
+import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.modules.auth.dto.LoginDto
 import com.kotlinadmin.modules.auth.dto.RegisterDto
-import com.kotlinadmin.modules.auth.dto.ResetRequestDto
 import com.kotlinadmin.modules.auth.dto.ResetProcessDto
+import com.kotlinadmin.modules.auth.dto.ResetRequestDto
 import com.kotlinadmin.modules.auth.services.IAuthService
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -192,6 +191,7 @@ fun Application.authModule() {
             val jti = UUID.randomUUID().toString()
             val expMs = System.currentTimeMillis() + config.jwtExpireMs
             val token = JWT.create()
+                .withIssuer("kotlinadmin")
                 .withSubject(user.id.value)
                 .withJWTId(jti)
                 .withClaim("name", user.name)
@@ -200,18 +200,26 @@ fun Application.authModule() {
                 .withExpiresAt(Date(expMs))
                 .sign(Algorithm.HMAC256(config.jwtSecret))
 
-            call.respondJson(data = mapOf(
-                "token" to token,
-                "user" to mapOf("id" to user.id.value, "name" to user.name, "email" to user.email, "roles" to roles)
-            ))
+            call.respondJson(
+                data = mapOf(
+                    "token" to token,
+                    "user" to mapOf("id" to user.id.value, "name" to user.name, "email" to user.email, "roles" to roles)
+                )
+            )
         }
 
         namedPost("api.v1.auth.register", "/api/v1/auth/register") {
             val dto = call.receive<RegisterDto>()
             val user = authService.register(dto)
-            call.respondJson(HttpStatusCode.Created, message = "Register Success.", data = mapOf(
-                "id" to user.id.value, "name" to user.name, "email" to user.email
-            ))
+            call.respondJson(
+                HttpStatusCode.Created,
+                message = "Register Success.",
+                data = mapOf(
+                    "id" to user.id.value,
+                    "name" to user.name,
+                    "email" to user.email
+                )
+            )
         }
 
         authenticate("api") {
@@ -219,12 +227,14 @@ fun Application.authModule() {
                 val principal = call.principal<JWTPrincipal>()!!
                 val userId = principal.subject!!
                 val user = authService.getById(userId)
-                call.respondJson(data = mapOf(
-                    "id" to user.id.value,
-                    "name" to user.name,
-                    "email" to user.email,
-                    "status" to user.status
-                ))
+                call.respondJson(
+                    data = mapOf(
+                        "id" to user.id.value,
+                        "name" to user.name,
+                        "email" to user.email,
+                        "status" to user.status
+                    )
+                )
             }
 
             namedPost("api.v1.auth.logout", "/api/v1/auth/logout") {

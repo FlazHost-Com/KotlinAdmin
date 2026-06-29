@@ -15,10 +15,13 @@ fun Application.dashboardModule() {
         namedGet("admin.v1.dashboard.index", "/admin/v1/dashboard") {
             val session = call.requireAuthenticated()
             val stats = dashboardService.getStats()
-            call.respondView("dashboard/index.ftl", mapOf(
-                "stats" to stats,
-                "page_title" to "Dashboard"
-            ))
+            call.respondView(
+                "dashboard/index.ftl",
+                mapOf(
+                    "stats" to stats,
+                    "page_title" to "Dashboard"
+                )
+            )
         }
     }
 }

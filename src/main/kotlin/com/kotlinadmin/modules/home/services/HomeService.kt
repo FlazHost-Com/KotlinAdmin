@@ -11,6 +11,10 @@ class HomeService : IHomeService {
         // Full frontend template switcher (download + cache) is a roadmap feature.
         return if (setting.feTemplate == "agency-consulting-002-creative-agency" ||
             setting.feTemplate.isNullOrBlank()
-        ) "default" else setting.feTemplate
+        ) {
+            "default"
+        } else {
+            setting.feTemplate
+        }
     }
 }

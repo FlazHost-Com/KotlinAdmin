@@ -15,38 +15,35 @@
       <#include "/layouts/topbar.ftl">
     </header>
     <main class="flex-1 p-6">
-      <div class="tw-card p-6 max-w-2xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold" style="color:var(--primary)">Create Role</h2>
-          <a href="/admin/v1/access/role" class="btn btn-light btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
-          </a>
-        </div>
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Role Management</h1>
+      </div>
+      <div class="tw-card p-6">
+        <h2 class="text-lg font-bold mb-4" style="color:var(--primary)">Role Form</h2>
         <form method="POST" action="/admin/v1/access/role/store?_csrf=${_csrf}">
-          <div class="mb-4">
-            <label class="form-label">[name] Name</label>
-            <input type="text" name="name" value="${(old.name)!""}"
-                   class="form-control <#if (errors.name)??>is-invalid</#if>"
-                   placeholder="Role name" required>
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">Name</label>
+            <input id="name" type="text" name="name" value="${(old.name)!""}"
+                   class="form-control <#if (errors.name)??>is-invalid</#if>">
             <#if (errors.name)??><div class="invalid-feedback">${errors.name}</div></#if>
           </div>
-          <div class="mb-4">
-            <label class="form-label">[desc] Description</label>
-            <textarea name="description" rows="3"
-                      class="form-control <#if (errors.description)??>is-invalid</#if>"
-                      placeholder="Role description...">${(old.description)!""}</textarea>
+          <div class="mb-3">
+            <label for="desc" class="form-label fw-semibold">Description</label>
+            <input id="desc" type="text" name="description" value="${(old.description)!""}"
+                   class="form-control <#if (errors.description)??>is-invalid</#if>">
             <#if (errors.description)??><div class="invalid-feedback">${errors.description}</div></#if>
           </div>
-          <div class="mb-6">
-            <label class="form-label">[status] Status</label>
-            <select name="status" class="form-control">
+          <div class="mb-4">
+            <label for="status" class="form-label fw-semibold">Status</label>
+            <select id="status" name="status" class="form-control <#if (errors.status)??>is-invalid</#if>" required>
               <option value="Active" <#if (old.status!"Active") == "Active">selected</#if>>Active</option>
               <option value="Inactive" <#if (old.status!"") == "Inactive">selected</#if>>Inactive</option>
             </select>
+            <#if (errors.status)??><div class="invalid-feedback">${errors.status}</div></#if>
           </div>
-          <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Role</button>
-            <a href="/admin/v1/access/role" class="btn btn-light">Cancel</a>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary-tw px-4 py-2"><i class="fas fa-save me-1"></i> Save</button>
+            <a href="/admin/v1/access/role" class="btn btn-danger px-4 py-2 text-white">Back</a>
           </div>
         </form>
       </div>

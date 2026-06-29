@@ -50,10 +50,12 @@ class UserService(private val bcryptRounds: Int = 12) : IUserService {
         if (dto.password != dto.passwordConfirm) throw ValidationError("Password confirmation does not match")
 
         return dbQuery {
-            if (UserEntity.find { Users.code eq dto.code }.firstOrNull() != null)
+            if (UserEntity.find { Users.code eq dto.code }.firstOrNull() != null) {
                 throw ConflictError("Code already exists")
-            if (UserEntity.find { Users.email eq dto.email }.firstOrNull() != null)
+            }
+            if (UserEntity.find { Users.email eq dto.email }.firstOrNull() != null) {
                 throw ConflictError("Email already exists.")
+            }
 
             val now = Instant.now()
             val user = UserEntity.new(UUID.randomUUID().toString()) {

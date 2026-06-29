@@ -24,8 +24,9 @@ class ProfileService(private val bcryptRounds: Int = 12) : IProfileService {
         dto.status?.let { user.status = it }
 
         if (!dto.password.isNullOrBlank()) {
-            if (dto.password != dto.passwordConfirm)
+            if (dto.password != dto.passwordConfirm) {
                 throw ValidationError("Password confirmation does not match")
+            }
             user.password = BCrypt.hashpw(dto.password, BCrypt.gensalt(bcryptRounds))
         }
 

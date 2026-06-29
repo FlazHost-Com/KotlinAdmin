@@ -3,14 +3,14 @@ package com.kotlinadmin.modules.access.routes
 import com.kotlinadmin.core.helpers.respondJson
 import com.kotlinadmin.core.helpers.respondView
 import com.kotlinadmin.core.routing.*
-import com.kotlinadmin.core.session.withFlash
 import com.kotlinadmin.core.session.withErrors
+import com.kotlinadmin.core.session.withFlash
+import com.kotlinadmin.modules.access.dto.DeleteSelectedDto
 import com.kotlinadmin.modules.access.dto.UserCreateDto
 import com.kotlinadmin.modules.access.dto.UserUpdateDto
-import com.kotlinadmin.modules.access.dto.DeleteSelectedDto
 import com.kotlinadmin.modules.access.models.toMap
-import com.kotlinadmin.modules.access.services.IUserService
 import com.kotlinadmin.modules.access.services.IRoleService
+import com.kotlinadmin.modules.access.services.IUserService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -32,11 +32,14 @@ fun Application.accessUserWebModule() {
                 call.checkAccess("admin.v1.access.user.index", "GET")
                 val params = call.request.queryParameters
                 val result = userService.index(params)
-                call.respondView("access/users/index.ftl", mapOf(
-                    "datas" to result.items,
-                    "paginate_data" to result.paginateData,
-                    "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
-                ))
+                call.respondView(
+                    "access/users/index.ftl",
+                    mapOf(
+                        "datas" to result.items,
+                        "paginate_data" to result.paginateData,
+                        "filter" to params.entries().associate { it.key to it.value.firstOrNull() }
+                    )
+                )
             }
 
             namedGet("admin.v1.access.user.create", "/create") {
@@ -56,25 +59,36 @@ fun Application.accessUserWebModule() {
                 val email = params["email"]?.trim() ?: ""
                 val code = params["code"]?.trim() ?: ""
                 val password = params["password"] ?: ""
+                val passwordConfirmation = params["password_confirmation"] ?: params["passwordConfirm"] ?: ""
                 val phone = params["phone"]?.trim() ?: ""
                 val status = params["status"]?.trim() ?: "Active"
                 val timezone = params["timezone"]?.trim() ?: "UTC"
-                val roleIds = params.getAll("role_ids[]") ?: emptyList()
+                val roleIds = params.getAll("roles[]") ?: params.getAll("role_ids[]") ?: emptyList()
 
                 if (name.isBlank()) errors["name"] = "Name is required"
                 if (email.isBlank()) errors["email"] = "Email is required"
                 if (password.isBlank()) errors["password"] = "Password is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf(
-                        "name" to name, "email" to email, "code" to code, "phone" to phone, "status" to status
-                    )))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf(
+                                "name" to name,
+                                "email" to email,
+                                "code" to code,
+                                "phone" to phone,
+                                "status" to status
+                            )
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/user/create")
                     return@namedPost
                 }
 
                 val dto = UserCreateDto(
                     name = name, email = email, code = code, password = password,
+                    passwordConfirm = passwordConfirmation,
                     phone = phone.ifBlank { null }, status = status, timezone = timezone, roleIds = roleIds
                 )
                 userService.store(dto, session.userId)
@@ -88,10 +102,13 @@ fun Application.accessUserWebModule() {
                 val id = call.parameters["id"] ?: return@namedGet call.respond(HttpStatusCode.BadRequest)
                 val user = userService.edit(id)
                 val roles = roleService.all()
-                call.respondView("access/users/edit.ftl", mapOf(
-                    "data" to user.toMap(),
-                    "roles" to roles
-                ))
+                call.respondView(
+                    "access/users/edit.ftl",
+                    mapOf(
+                        "data" to user.toMap(),
+                        "roles" to roles
+                    )
+                )
             }
 
             namedPut("admin.v1.access.user.update", "/{id}/update") {
@@ -108,22 +125,37 @@ fun Application.accessUserWebModule() {
                 val status = params["status"]?.trim() ?: "Active"
                 val timezone = params["timezone"]?.trim() ?: "UTC"
                 val password = params["password"]?.ifBlank { null }
-                val roleIds = params.getAll("role_ids[]") ?: emptyList()
+                val roleIds = params.getAll("roles[]") ?: params.getAll("role_ids[]") ?: emptyList()
 
                 if (name.isBlank()) errors["name"] = "Name is required"
                 if (email.isBlank()) errors["email"] = "Email is required"
 
                 if (errors.isNotEmpty()) {
-                    call.sessions.set(session.withErrors(errors, mapOf(
-                        "name" to name, "email" to email, "code" to code, "phone" to phone, "status" to status
-                    )))
+                    call.sessions.set(
+                        session.withErrors(
+                            errors,
+                            mapOf(
+                                "name" to name,
+                                "email" to email,
+                                "code" to code,
+                                "phone" to phone,
+                                "status" to status
+                            )
+                        )
+                    )
                     call.respondRedirect("/admin/v1/access/user/$id/edit")
                     return@namedPut
                 }
 
                 val dto = UserUpdateDto(
-                    name = name, email = email, code = code, password = password,
-                    phone = phone.ifBlank { null }, status = status, timezone = timezone, roleIds = roleIds
+                    name = name,
+                    email = email,
+                    code = code,
+                    password = password,
+                    phone = phone.ifBlank { null },
+                    status = status,
+                    timezone = timezone,
+                    roleIds = roleIds
                 )
                 userService.update(id, dto, session.userId)
                 call.sessions.set(session.withFlash("success", "Update User Success."))
@@ -166,14 +198,22 @@ fun Application.accessUserApiModule() {
                 namedGet("api.v1.access.user.index") {
                     val params = call.request.queryParameters
                     val result = userService.index(params)
-                    call.respondJson(data = mapOf("data" to result.items, "pagination" to result.paginateData))
+                    call.respondJson(
+                        data = mapOf(
+                            "data" to result.items.map { it.toMap() },
+                            "pagination" to result.paginateData.toMap()
+                        )
+                    )
                 }
 
                 namedPost("api.v1.access.user.store", "/store") {
                     val principal = call.principal<JWTPrincipal>()!!
                     val dto = call.receive<UserCreateDto>()
                     val user = userService.store(dto, principal.subject!!)
-                    call.respondJson(HttpStatusCode.Created, data = mapOf("message" to "User created", "data" to user.toMap()))
+                    call.respondJson(
+                        HttpStatusCode.Created,
+                        data = mapOf("message" to "User created", "data" to user.toMap())
+                    )
                 }
 
                 namedGet("api.v1.access.user.edit", "/{id}/edit") {
@@ -199,7 +239,9 @@ fun Application.accessUserApiModule() {
                 namedPost("api.v1.access.user.delete_selected", "/delete_selected") {
                     val dto = call.receive<DeleteSelectedDto>()
                     userService.deleteSelected(dto.selected)
-                    call.respondJson(data = mapOf("message" to "${dto.selected.size} user(s) deleted", "count" to dto.selected.size))
+                    call.respondJson(
+                        data = mapOf("message" to "${dto.selected.size} user(s) deleted", "count" to dto.selected.size)
+                    )
                 }
             }
         }
