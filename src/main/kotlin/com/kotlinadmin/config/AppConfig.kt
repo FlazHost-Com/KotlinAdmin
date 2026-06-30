@@ -48,7 +48,7 @@ data class AppConfig(
                 jwtExpiresIn = config.propertyOrNull("app.jwtExpiresIn")?.getString() ?: "1h",
                 sessionSecret = sessionSecret,
                 sessionTtlHours = config.propertyOrNull("app.sessionTtlHours")?.getString()?.toLongOrNull() ?: 6L,
-                sessionDriver = config.propertyOrNull("app.sessionDriver")?.getString() ?: "redis",
+                sessionDriver = config.propertyOrNull("app.sessionDriver")?.getString() ?: "database",
                 bcryptRounds = config.propertyOrNull("app.bcryptRounds")?.getString()?.toIntOrNull() ?: 10,
                 otpExpiryMinutes = config.propertyOrNull("app.otpExpiryMinutes")?.getString()?.toLongOrNull() ?: 10L,
                 defaultPageSize = config.propertyOrNull("app.defaultPageSize")?.getString()?.toIntOrNull() ?: 10,
