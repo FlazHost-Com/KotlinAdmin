@@ -14,6 +14,7 @@ import com.kotlinadmin.core.helpers.respondError
 import com.kotlinadmin.core.plugins.CsrfPlugin
 import com.kotlinadmin.core.plugins.MethodOverridePlugin
 import com.kotlinadmin.core.plugins.SecurityHeadersPlugin
+import com.kotlinadmin.core.session.DatabaseSessionStorage
 import com.kotlinadmin.core.session.RedisSessionStorage
 import com.kotlinadmin.core.session.UserSession
 import com.kotlinadmin.core.session.withErrors
@@ -109,7 +110,11 @@ fun Application.module() {
 
     if (appConfig.isFullMode) {
         install(Sessions) {
-            cookie<UserSession>("KOTLINADMIN_SESSION", storage = RedisSessionStorage()) {
+            val sessionStorage = if (appConfig.sessionDriver == "database")
+                DatabaseSessionStorage(appConfig.sessionTtlHours * 3600L)
+            else
+                RedisSessionStorage(appConfig.sessionTtlHours * 3600L)
+            cookie<UserSession>("KOTLINADMIN_SESSION", storage = sessionStorage) {
                 cookie.httpOnly = true
                 cookie.maxAgeInSeconds = appConfig.sessionTtlHours * 3600L
                 cookie.path = "/"
