@@ -13,13 +13,19 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.Parameters
 import kotlinx.coroutines.runBlocking
+import java.nio.file.Files
 
 class UserServiceTest : DescribeSpec({
 
     beforeSpec {
+        // DB file temporer unik per run: skema selalu segar sehingga migrasi Flyway
+        // dan uji duplikat-email deterministik (URL ":memory:?..." lama justru membuat
+        // file literal yang persisten antar-run → checksum Flyway basi).
+        val dbFile = Files.createTempFile("kotlinadmin-userservice-test-", ".db").toFile()
+        dbFile.deleteOnExit()
         DatabaseConfig.setup(
             DbConfig(
-                url = "jdbc:sqlite::memory:?cache=shared&mode=memory",
+                url = "jdbc:sqlite:${dbFile.absolutePath}",
                 driver = "org.sqlite.JDBC",
                 user = "",
                 password = ""

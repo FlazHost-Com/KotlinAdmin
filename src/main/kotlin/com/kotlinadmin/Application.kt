@@ -68,6 +68,8 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import kotlin.time.Duration.Companion.seconds
 
+private const val SECONDS_PER_HOUR = 3600L
+
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 fun Application.module() {
@@ -110,13 +112,15 @@ fun Application.module() {
 
     if (appConfig.isFullMode) {
         install(Sessions) {
-            val sessionStorage = if (appConfig.sessionDriver == "database")
-                DatabaseSessionStorage(appConfig.sessionTtlHours * 3600L)
-            else
-                RedisSessionStorage(appConfig.sessionTtlHours * 3600L)
+            val sessionTtlSeconds = appConfig.sessionTtlHours * SECONDS_PER_HOUR
+            val sessionStorage = if (appConfig.sessionDriver == "database") {
+                DatabaseSessionStorage(sessionTtlSeconds)
+            } else {
+                RedisSessionStorage(sessionTtlSeconds)
+            }
             cookie<UserSession>("KOTLINADMIN_SESSION", storage = sessionStorage) {
                 cookie.httpOnly = true
-                cookie.maxAgeInSeconds = appConfig.sessionTtlHours * 3600L
+                cookie.maxAgeInSeconds = sessionTtlSeconds
                 cookie.path = "/"
                 serializer = object : io.ktor.server.sessions.SessionSerializer<UserSession> {
                     override fun deserialize(text: String): UserSession =

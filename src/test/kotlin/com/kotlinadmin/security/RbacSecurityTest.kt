@@ -1,5 +1,6 @@
 package com.kotlinadmin.security
 
+import com.kotlinadmin.extractJwtToken
 import com.kotlinadmin.module
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -7,9 +8,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 class RbacSecurityTest : DescribeSpec({
 
@@ -17,7 +15,9 @@ class RbacSecurityTest : DescribeSpec({
         it("unauthenticated web request is redirected to /auth/login") {
             testApplication {
                 application { module() }
-                val response = client.get("/admin/v1/dashboard")
+                // Client default mengikuti redirect GET; matikan agar 302 terlihat.
+                val rawClient = createClient { followRedirects = false }
+                val response = rawClient.get("/admin/v1/dashboard")
                 response.status.value shouldBe 302
                 val location = response.headers[HttpHeaders.Location] ?: ""
                 location.contains("/auth/login") shouldBe true
@@ -66,8 +66,7 @@ class RbacSecurityTest : DescribeSpec({
                     contentType(ContentType.Application.Json)
                     setBody("""{"email":"admin@admin.com","password":"12345678"}""")
                 }
-                val token = Json.parseToJsonElement(loginResp.bodyAsText())
-                    .jsonObject["token"]!!.jsonPrimitive.content
+                val token = requireNotNull(extractJwtToken(loginResp.bodyAsText())) { "no token in login response" }
 
                 // Attempt to inject extra field "blocked: false→true" via API body
                 val storeResp = client.post("/api/v1/access/user/store") {

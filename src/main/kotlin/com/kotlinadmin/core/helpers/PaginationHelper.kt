@@ -3,6 +3,8 @@ package com.kotlinadmin.core.helpers
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 
+private const val DEFAULT_PAGE_SIZE = 10
+
 data class PaginateResult<T>(
     val items: List<T>,
     val paginateData: PaginateData
@@ -27,7 +29,7 @@ data class PaginateData(
 }
 
 fun buildPaginateData(page: Int, pageSize: Int, total: Long): PaginateData {
-    val safePageSize = if (pageSize <= 0) 10 else pageSize
+    val safePageSize = if (pageSize <= 0) DEFAULT_PAGE_SIZE else pageSize
     val safePage = if (page <= 0) 1 else page
     val totalPages = ((total + safePageSize - 1) / safePageSize).toInt().coerceAtLeast(1)
     return PaginateData(
@@ -41,7 +43,7 @@ fun buildPaginateData(page: Int, pageSize: Int, total: Long): PaginateData {
 }
 
 fun <T> paginate(items: List<T>, page: Int, pageSize: Int): PaginateResult<T> {
-    val safePageSize = if (pageSize <= 0) 10 else pageSize
+    val safePageSize = if (pageSize <= 0) DEFAULT_PAGE_SIZE else pageSize
     val total = items.size.toLong()
     val totalPages = if (total == 0L) 0 else ((total + safePageSize - 1) / safePageSize).toInt()
     val safePage = when {
@@ -66,7 +68,7 @@ fun <T> paginate(items: List<T>, page: Int, pageSize: Int): PaginateResult<T> {
 
 // Used by services inside a transaction block: paginateQuery(query, page, size) { row -> ... }
 fun <T> paginateQuery(query: Query, page: Int, pageSize: Int, mapper: (ResultRow) -> T): PaginateResult<T> {
-    val safePageSize = if (pageSize <= 0) 10 else pageSize
+    val safePageSize = if (pageSize <= 0) DEFAULT_PAGE_SIZE else pageSize
     val safePage = if (page <= 0) 1 else page
     val total = query.count()
     val offset = ((safePage - 1) * safePageSize).toLong()

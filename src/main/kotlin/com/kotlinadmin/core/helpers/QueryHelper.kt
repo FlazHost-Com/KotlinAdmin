@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 
 object QueryHelper {
+    private val ALLOWED_PAGE_SIZES = listOf(10, 20, 50, 100)
+
     @JvmName("ciLikeNonNull")
     fun ciLike(column: Column<String>, value: String): Op<Boolean> {
         val lower = LowerCase(column)
@@ -24,7 +26,7 @@ object QueryHelper {
 
     fun parsePageSize(raw: String?, default: Int = 10): Int {
         val v = raw?.toIntOrNull() ?: default
-        return if (v in listOf(10, 20, 50, 100)) v else default
+        return if (v in ALLOWED_PAGE_SIZES) v else default
     }
 
     fun parsePage(raw: String?, default: Int = 1): Int {

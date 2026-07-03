@@ -16,11 +16,13 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.time.Instant
 import java.util.UUID
 
+private const val DEFAULT_PAGE_SIZE = 10
+
 class RoleService : IRoleService {
 
     override suspend fun index(params: Parameters): PaginateResult<RoleEntity> = dbQuery {
         val page = params["q_page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize = params["q_page_size"]?.toIntOrNull() ?: 10
+        val pageSize = params["q_page_size"]?.toIntOrNull() ?: DEFAULT_PAGE_SIZE
 
         var query = Roles.selectAll()
         params["q_name"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { ciLike(Roles.name, it) } }
@@ -84,7 +86,7 @@ class RoleService : IRoleService {
         RoleEntity.findById(roleId) ?: throw NotFoundError("Role not found")
 
         val page = params["q_page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize = params["q_page_size"]?.toIntOrNull() ?: 10
+        val pageSize = params["q_page_size"]?.toIntOrNull() ?: DEFAULT_PAGE_SIZE
 
         val assignedIds = RolesPermissions
             .select(RolesPermissions.permissionId)
@@ -94,7 +96,9 @@ class RoleService : IRoleService {
 
         var query = Permissions.selectAll()
         params["q_name"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { ciLike(Permissions.name, it) } }
-        params["q_desc"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { ciLike(Permissions.description, it) } }
+        params["q_desc"]?.takeIf { it.isNotBlank() }?.let {
+            query = query.andWhere { ciLike(Permissions.description, it) }
+        }
         params["q_status"]?.takeIf { it.isNotBlank() }?.let { s ->
             when (s) {
                 "Active" -> query = query.andWhere { Permissions.id inList assignedIds }

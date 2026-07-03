@@ -10,7 +10,7 @@ import io.ktor.server.routing.*
 fun Application.componentsModule() {
     routing {
         namedGet("admin.v1.components.index", "/admin/v1/components") {
-            val session = call.requireAuthenticated()
+            call.requireAuthenticated()
             call.checkAccess("admin.v1.components.index", "GET")
             call.respondView("components/index.ftl", mapOf("page_title" to "UI Components"))
         }

@@ -96,7 +96,7 @@ suspend fun ApplicationCall.respondView(
                             }
                             .count() > 0
                     }
-                } catch (e: Exception) { false }
+                } catch (_: Exception) { false }
             }
         },
         "getFile" to TemplateMethodModelEx { args ->

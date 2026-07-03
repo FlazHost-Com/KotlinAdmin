@@ -46,8 +46,10 @@ private fun timingSafeEquals(a: String, b: String): Boolean {
     return MessageDigest.isEqual(aBytes, bBytes)
 }
 
+private const val CSRF_TOKEN_BYTES = 32
+
 fun generateCsrfToken(): String {
-    val bytes = ByteArray(32)
+    val bytes = ByteArray(CSRF_TOKEN_BYTES)
     SecureRandom().nextBytes(bytes)
     return bytes.joinToString("") { "%02x".format(it) }
 }

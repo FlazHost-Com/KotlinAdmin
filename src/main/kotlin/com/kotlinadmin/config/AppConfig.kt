@@ -25,6 +25,13 @@ data class AppConfig(
     val jwtExpireMs: Long get() = parseExpiresIn(jwtExpiresIn)
 
     companion object {
+        private const val MS_PER_SECOND = 1_000L
+        private const val MS_PER_MINUTE = 60_000L
+        private const val MS_PER_HOUR = 3_600_000L
+        private const val MS_PER_DAY = 86_400_000L
+        private const val DEFAULT_MINUTES = 60L
+        private const val DEFAULT_SECONDS = 3_600L
+
         private const val DEFAULT_JWT_SECRET = "change-me-in-production-min-32-chars"
         private const val DEFAULT_SESSION_SECRET = "change-me-session-secret-min-32xx"
 
@@ -88,10 +95,10 @@ data class AppConfig(
         fun parseExpiresIn(s: String): Long {
             val trimmed = s.trim().lowercase()
             return when {
-                trimmed.endsWith("h") -> (trimmed.dropLast(1).toLongOrNull() ?: 1L) * 3_600_000L
-                trimmed.endsWith("m") -> (trimmed.dropLast(1).toLongOrNull() ?: 60L) * 60_000L
-                trimmed.endsWith("d") -> (trimmed.dropLast(1).toLongOrNull() ?: 1L) * 86_400_000L
-                else -> (trimmed.toLongOrNull() ?: 3600L) * 1_000L
+                trimmed.endsWith("h") -> (trimmed.dropLast(1).toLongOrNull() ?: 1L) * MS_PER_HOUR
+                trimmed.endsWith("m") -> (trimmed.dropLast(1).toLongOrNull() ?: DEFAULT_MINUTES) * MS_PER_MINUTE
+                trimmed.endsWith("d") -> (trimmed.dropLast(1).toLongOrNull() ?: 1L) * MS_PER_DAY
+                else -> (trimmed.toLongOrNull() ?: DEFAULT_SECONDS) * MS_PER_SECOND
             }
         }
     }

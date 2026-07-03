@@ -6,8 +6,9 @@ import io.cucumber.java.Before
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.TestApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -18,9 +19,12 @@ class CommonStepDefs {
     @Before
     fun setUp() {
         SharedTestState.reset()
-        SharedTestState.testApp = TestApplication {
+        val app = TestApplication {
             application { module() }
         }
+        SharedTestState.testApp = app
+        // followRedirects=false: skenario BDD memverifikasi status 302 + Location mentah.
+        SharedTestState.httpClient = app.createClient { followRedirects = false }
     }
 
     @After
@@ -30,8 +34,7 @@ class CommonStepDefs {
 
     @When("I GET {string}")
     fun iGet(path: String) = runBlocking {
-        val app = requireNotNull(SharedTestState.testApp)
-        SharedTestState.lastResponse = app.client.get(path) {
+        SharedTestState.lastResponse = SharedTestState.client.get(path) {
             val jwt = SharedTestState.jwtToken
             val cookies = SharedTestState.sessionCookies
             if (jwt != null) header(HttpHeaders.Authorization, "Bearer $jwt")

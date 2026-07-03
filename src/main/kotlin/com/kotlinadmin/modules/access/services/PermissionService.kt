@@ -18,18 +18,22 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.time.Instant
 import java.util.UUID
 
+private const val DEFAULT_PAGE_SIZE = 10
+
 class PermissionService : IPermissionService {
 
     override suspend fun index(params: Parameters): PaginateResult<PermissionEntity> = dbQuery {
         val page = params["q_page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize = params["q_page_size"]?.toIntOrNull() ?: 10
+        val pageSize = params["q_page_size"]?.toIntOrNull() ?: DEFAULT_PAGE_SIZE
 
         var query = Permissions.selectAll()
         params["q_name"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { ciLike(Permissions.name, it) } }
         params["q_method"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { Permissions.method eq it } }
         params["q_status"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { Permissions.status eq it } }
         params["q_guard"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { Permissions.guardName eq it } }
-        params["q_desc"]?.takeIf { it.isNotBlank() }?.let { query = query.andWhere { ciLike(Permissions.description, it) } }
+        params["q_desc"]?.takeIf { it.isNotBlank() }?.let {
+            query = query.andWhere { ciLike(Permissions.description, it) }
+        }
 
         paginateQuery(query, page, pageSize) { row -> PermissionEntity.wrapRow(row) }
     }

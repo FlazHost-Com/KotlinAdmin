@@ -19,11 +19,13 @@ import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
 import java.util.UUID
 
+private const val DEFAULT_PAGE_SIZE = 10
+
 class UserService(private val bcryptRounds: Int = 12) : IUserService {
 
     override suspend fun index(params: Parameters): PaginateResult<UserEntity> = dbQuery {
         val page = params["q_page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize = params["q_page_size"]?.toIntOrNull() ?: 10
+        val pageSize = params["q_page_size"]?.toIntOrNull() ?: DEFAULT_PAGE_SIZE
         val qRole = params["q_role"]
 
         var query = Users.selectAll()

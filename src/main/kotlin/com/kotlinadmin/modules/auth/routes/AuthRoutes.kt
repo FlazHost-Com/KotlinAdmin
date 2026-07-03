@@ -26,6 +26,8 @@ import io.ktor.server.sessions.*
 import org.koin.ktor.ext.get
 import java.util.*
 
+private const val MS_PER_SECOND = 1000L
+
 fun Application.authModule() {
     val authService = get<IAuthService>()
     val config = get<AppConfig>()
@@ -241,7 +243,7 @@ fun Application.authModule() {
                 val principal = call.principal<JWTPrincipal>()!!
                 val jti = principal.jwtId ?: ""
                 val expMs = principal.expiresAt?.time ?: System.currentTimeMillis()
-                val ttl = ((expMs - System.currentTimeMillis()) / 1000).coerceAtLeast(1)
+                val ttl = ((expMs - System.currentTimeMillis()) / MS_PER_SECOND).coerceAtLeast(1)
                 authService.blacklistJwt(jti, ttl)
                 call.respondJson(data = mapOf("message" to "Logged out successfully"))
             }

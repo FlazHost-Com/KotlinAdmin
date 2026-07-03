@@ -1,5 +1,6 @@
 package com.kotlinadmin.api
 
+import com.kotlinadmin.extractJwtToken
 import com.kotlinadmin.module
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -8,9 +9,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 class AuthApiTest : DescribeSpec({
 
@@ -55,8 +53,7 @@ class AuthApiTest : DescribeSpec({
                     contentType(ContentType.Application.Json)
                     setBody("""{"email":"admin@admin.com","password":"12345678"}""")
                 }
-                val token = Json.parseToJsonElement(loginResp.bodyAsText())
-                    .jsonObject["token"]!!.jsonPrimitive.content
+                val token = requireNotNull(extractJwtToken(loginResp.bodyAsText())) { "no token in login response" }
 
                 val meResp = client.get("/api/v1/auth/me") {
                     header(HttpHeaders.Authorization, "Bearer $token")
@@ -76,8 +73,7 @@ class AuthApiTest : DescribeSpec({
                     contentType(ContentType.Application.Json)
                     setBody("""{"email":"admin@admin.com","password":"12345678"}""")
                 }
-                val token = Json.parseToJsonElement(loginResp.bodyAsText())
-                    .jsonObject["token"]!!.jsonPrimitive.content
+                val token = requireNotNull(extractJwtToken(loginResp.bodyAsText())) { "no token in login response" }
 
                 // 2. /me returns 200
                 val beforeLogout = client.get("/api/v1/auth/me") {
@@ -108,8 +104,7 @@ class AuthApiTest : DescribeSpec({
                     contentType(ContentType.Application.Json)
                     setBody("""{"email":"admin@admin.com","password":"12345678"}""")
                 }
-                val token = Json.parseToJsonElement(loginResp.bodyAsText())
-                    .jsonObject["token"]!!.jsonPrimitive.content
+                val token = requireNotNull(extractJwtToken(loginResp.bodyAsText())) { "no token in login response" }
 
                 val response = client.get("/api/v1/access/user") {
                     header(HttpHeaders.Authorization, "Bearer $token")
@@ -125,8 +120,7 @@ class AuthApiTest : DescribeSpec({
                     contentType(ContentType.Application.Json)
                     setBody("""{"email":"admin@admin.com","password":"12345678"}""")
                 }
-                val token = Json.parseToJsonElement(loginResp.bodyAsText())
-                    .jsonObject["token"]!!.jsonPrimitive.content
+                val token = requireNotNull(extractJwtToken(loginResp.bodyAsText())) { "no token in login response" }
 
                 val response = client.get("/api/v1/access/users") {
                     header(HttpHeaders.Authorization, "Bearer $token")

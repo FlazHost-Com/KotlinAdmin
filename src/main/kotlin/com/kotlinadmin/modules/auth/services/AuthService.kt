@@ -18,28 +18,37 @@ import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
 import java.util.UUID
 
+private const val RATE_LIMIT_WINDOW_SECONDS = 900L
+private const val AUTH_RATE_LIMIT_MAX = 10
+private const val OTP_RATE_LIMIT_MAX = 5
+private const val USER_CODE_MODULO = 100_000
+private const val MS_PER_MINUTE = 60 * 1000L
+
 class AuthService(
     private val redis: RedisManager,
     private val bcryptRounds: Int = 10,
     private val otpExpiryMinutes: Long = 10L
 ) : IAuthService {
 
-    private fun isLoopback(ip: String) = ip == "127.0.0.1" || ip == "::1" || ip == "0:0:0:0:0:0:0:1"
+    // "localhost" tercakup: Ktor (termasuk test engine) melaporkan remote host
+    // sebagai hostname loopback, bukan alamat IP.
+    private fun isLoopback(ip: String) =
+        ip == "127.0.0.1" || ip == "::1" || ip == "0:0:0:0:0:0:0:1" || ip == "localhost"
 
     // authLimiter: 10 req / 15 min / IP (loopback exempt)
     override suspend fun checkAuthRateLimit(ip: String) {
         if (isLoopback(ip)) return
         val key = "auth_rate:$ip"
-        val count = redis.incrementRateLimit(key, 900L)
-        if (count > 10) throw ValidationError("Too many requests. Please try again later.")
+        val count = redis.incrementRateLimit(key, RATE_LIMIT_WINDOW_SECONDS)
+        if (count > AUTH_RATE_LIMIT_MAX) throw ValidationError("Too many requests. Please try again later.")
     }
 
     // otpLimiter: 5 req / 15 min / IP (loopback exempt)
     override suspend fun checkOtpRateLimit(ip: String) {
         if (isLoopback(ip)) return
         val key = "otp_proc_rate:$ip"
-        val count = redis.incrementRateLimit(key, 900L)
-        if (count > 5) throw ValidationError("Too many OTP attempts. Please wait before trying again.")
+        val count = redis.incrementRateLimit(key, RATE_LIMIT_WINDOW_SECONDS)
+        if (count > OTP_RATE_LIMIT_MAX) throw ValidationError("Too many OTP attempts. Please wait before trying again.")
     }
 
     override suspend fun login(email: String, password: String): UserEntity = dbQuery {
@@ -61,7 +70,7 @@ class AuthService(
             }
             val now = Instant.now()
             UserEntity.new(UUID.randomUUID().toString()) {
-                code = "U${System.currentTimeMillis() % 100000}"
+                code = "U${System.currentTimeMillis() % USER_CODE_MODULO}"
                 name = dto.name
                 email = dto.email
                 password = BCrypt.hashpw(dto.password, BCrypt.gensalt(bcryptRounds))
@@ -80,7 +89,7 @@ class AuthService(
 
         val otp = OtpHelper.generate()
         val otpHash = OtpHelper.hash(otp, bcryptRounds)
-        val expires = System.currentTimeMillis() + (otpExpiryMinutes * 60 * 1000L)
+        val expires = System.currentTimeMillis() + (otpExpiryMinutes * MS_PER_MINUTE)
 
         dbQuery {
             user.passwordOtp = otpHash

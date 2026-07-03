@@ -10,11 +10,12 @@ Feature: User CRUD
 
   Scenario: Admin can create a user
     When I POST to "/admin/v1/access/user/store" with CSRF and form fields:
-      | code     | USR001           |
-      | name     | Test User        |
-      | email    | test@example.com |
-      | password | password123      |
-      | status   | Active           |
+      | code                  | USR001           |
+      | name                  | Test User        |
+      | email                 | test@example.com |
+      | password              | password123      |
+      | password_confirmation | password123      |
+      | status                | Active           |
     Then the response status is 302
     And I am redirected to "/admin/v1/access/user"
 

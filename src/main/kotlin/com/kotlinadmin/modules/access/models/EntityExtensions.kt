@@ -14,7 +14,7 @@ fun UserEntity.toMap(): Map<String, Any?> = mapOf(
     "updated_at" to updatedAt?.toString(),
     "roles" to try {
         roles.map { mapOf("id" to it.id.value, "name" to it.name) }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         emptyList<Map<String, Any>>()
     }
 )

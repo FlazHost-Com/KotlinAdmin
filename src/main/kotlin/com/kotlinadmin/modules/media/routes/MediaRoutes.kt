@@ -14,13 +14,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.get
 
-private val ALLOWED_MIME = setOf(
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif"
-)
 private const val MAX_SIZE = 2 * 1024 * 1024L // 2MB
 
 fun Application.mediaModule() {

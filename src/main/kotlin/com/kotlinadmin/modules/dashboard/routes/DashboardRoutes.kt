@@ -13,7 +13,7 @@ fun Application.dashboardModule() {
 
     routing {
         namedGet("admin.v1.dashboard.index", "/admin/v1/dashboard") {
-            val session = call.requireAuthenticated()
+            call.requireAuthenticated()
             val stats = dashboardService.getStats()
             call.respondView(
                 "dashboard/index.ftl",

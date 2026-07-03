@@ -69,7 +69,9 @@ class SmokeTest : DescribeSpec({
         it("unauthenticated /admin/v1/dashboard redirects to /auth/login") {
             testApplication {
                 application { module() }
-                val response = client.get("/admin/v1/dashboard")
+                // Client default mengikuti redirect GET; matikan agar 302 terlihat.
+                val rawClient = createClient { followRedirects = false }
+                val response = rawClient.get("/admin/v1/dashboard")
                 response.status.value shouldBe 302
                 val location = response.headers[HttpHeaders.Location] ?: ""
                 location shouldContain "/auth/login"
