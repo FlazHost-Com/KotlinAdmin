@@ -51,6 +51,7 @@ import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.ratelimit.RateLimit
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -80,6 +81,12 @@ fun Application.module() {
 
     RedisManager.init(appConfig.redis)
     DatabaseConfig.setup(appConfig.db)
+
+    // Di belakang reverse proxy TLS-terminating (CapRover/nginx): percayai
+    // X-Forwarded-* supaya `call.request.origin.scheme` = https. Tanpa ini scheme
+    // terbaca http → URL absolut & flag cookie `secure` salah. Harus dipasang
+    // paling awal, sebelum plugin lain (Sessions/Auth) membaca origin.
+    install(XForwardedHeaders)
 
     install(Koin) {
         slf4jLogger()
@@ -113,6 +120,7 @@ fun Application.module() {
         }
     }
 
+    val cookieSecure = !developmentMode
     if (appConfig.isFullMode) {
         install(Sessions) {
             val sessionTtlSeconds = appConfig.sessionTtlHours * SECONDS_PER_HOUR
@@ -123,6 +131,10 @@ fun Application.module() {
             }
             cookie<UserSession>("KOTLINADMIN_SESSION", storage = sessionStorage) {
                 cookie.httpOnly = true
+                // Cookie sesi ditandai Secure di produksi (di belakang proxy TLS
+                // browser tetap melihat https, jadi cookie diterima). Di dev
+                // (developmentMode) tetap non-secure agar login http localhost jalan.
+                cookie.secure = cookieSecure
                 cookie.maxAgeInSeconds = sessionTtlSeconds
                 cookie.path = "/"
                 serializer = object : io.ktor.server.sessions.SessionSerializer<UserSession> {
