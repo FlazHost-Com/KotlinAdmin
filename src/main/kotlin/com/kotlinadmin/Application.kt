@@ -19,6 +19,7 @@ import com.kotlinadmin.core.session.RedisSessionStorage
 import com.kotlinadmin.core.session.UserSession
 import com.kotlinadmin.core.session.withErrors
 import com.kotlinadmin.core.session.withFlash
+import com.kotlinadmin.core.storage.IStorageService
 import com.kotlinadmin.di.appModule
 import com.kotlinadmin.modules.access.routes.accessApiModule
 import com.kotlinadmin.modules.access.routes.accessWebModule
@@ -65,6 +66,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import kotlin.time.Duration.Companion.seconds
@@ -257,11 +259,17 @@ fun Application.module() {
 }
 
 fun Application.configureRouting(config: AppConfig) {
+    // Driver storage lokal → sajikan file unggahan pada prefix URL stabil
+    // (mis. /storage), dipisah dari path filesystem. Object storage (oss/s3)
+    // memakai URL absolut, jadi tidak ada mount lokal. Cukup .env untuk berpindah.
+    val storageMount = get<IStorageService>().localMount()
+
     routing {
         staticResources("/assets", "static")
         staticResources("/be", "static/be")
-        // File upload (logo/icon/login_image) — getFile() menghasilkan URL /uploads/*.
-        staticFiles("/uploads", java.io.File("uploads"))
+        if (storageMount != null) {
+            staticFiles(storageMount.first, storageMount.second)
+        }
 
         if (config.isFullMode) {
             authModule()
