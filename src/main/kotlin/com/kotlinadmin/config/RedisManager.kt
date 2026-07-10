@@ -1,6 +1,7 @@
 package com.kotlinadmin.config
 
 import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisException
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
@@ -36,36 +37,39 @@ object RedisManager {
 
     fun init(config: RedisConfig) {
         val uri = buildUri(config)
+        // Simpan uri lebih dulu agar reconnect lazy tetap mungkin walau connect awal gagal.
+        pendingUri = uri
         try {
-            client = RedisClient.create(uri)
-            connection = client?.connect()
+            val created = RedisClient.create(uri)
+            client = created
+            connection = created.connect()
             logger.info("Redis connected to ${uri.host}:${uri.port} (ssl=${uri.isSsl})")
-        } catch (ex: Exception) {
+        } catch (ex: RedisException) {
             // Kegagalan Redis tidak boleh memblokir startup HTTP. Sambungan akan
             // dicoba-ulang secara lazy saat command pertama dijalankan.
             logger.error("Redis connection failed at startup (ssl=${uri.isSsl}); continuing without Redis", ex)
         }
-        // Simpan uri untuk reconnect lazy.
-        pendingUri = uri
     }
 
     private var pendingUri: RedisURI? = null
 
     private fun conn(): StatefulRedisConnection<String, String>? {
-        connection?.let { if (it.isOpen) return it }
-        val uri = pendingUri ?: return connection
-        return try {
-            if (client == null) client = RedisClient.create(uri)
-            connection = client?.connect()
-            connection
-        } catch (ex: Exception) {
+        val active = connection?.takeIf { it.isOpen }
+        return active ?: pendingUri?.let { connect(it) }
+    }
+
+    /** Sambungan lazy; `null` bila Redis sedang tak tersedia. */
+    private fun connect(uri: RedisURI): StatefulRedisConnection<String, String>? =
+        try {
+            val active = client ?: RedisClient.create(uri).also { client = it }
+            active.connect().also { connection = it }
+        } catch (ex: RedisException) {
             logger.warn("Redis reconnect failed", ex)
             null
         }
-    }
 
     fun commands(): RedisCommands<String, String> =
-        conn()?.sync() ?: throw IllegalStateException("Redis is not available")
+        conn()?.sync() ?: error("Redis is not available")
 
     fun blacklistJwt(jti: String, ttlSeconds: Long) {
         conn()?.sync()?.setex("blacklist:$jti", ttlSeconds, "1")
