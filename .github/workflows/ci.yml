@@ -105,7 +105,9 @@ jobs:
             password: rootpass
             port: 3306
           - db: postgres
-            image: postgres:16-alpine
+            # 18 = versi PostgreSQL terkelola yang dipakai app di FlazHost. CI menguji
+            # versi yang benar-benar dijalankan user, bukan versi yang kebetulan tersedia.
+            image: postgres:18-alpine
             type: postgres
             jdbc: "postgresql://"
             user: postgres
@@ -144,6 +146,28 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+
+      # Samakan MySQL CI dengan MySQL PRODUKSI (Alibaba RDS), bukan dengan default image.
+      #
+      # Image mysql:8.0 menyalakan explicit_defaults_for_timestamp (ON); RDS yang dipakai
+      # app di FlazHost menjalankannya OFF. Bedanya bukan kosmetik: dengan OFF, kolom
+      # TIMESTAMP NOT NULL tanpa DEFAULT ditolak (Error 1067 "Invalid default value"), dan
+      # kolom TIMESTAMP pertama diam-diam memperoleh ON UPDATE CURRENT_TIMESTAMP.
+      #
+      # Justru karena beda inilah CI ini pernah HIJAU sementara app-nya 502 di produksi:
+      # migrasi yang sah di sini ditolak di sana. Menguji MySQL dengan setelan yang tidak
+      # dipakai siapa pun hanya menghasilkan rasa aman.
+      #
+      # Variabelnya dinamis dan sesi baru mewarisi nilai global, jadi menyetelnya sebelum
+      # app konek sudah cukup. (GitHub `services` tidak bisa mengoper argumen ke server.)
+      - name: Match production MySQL (explicit_defaults_for_timestamp=OFF)
+        if: matrix.db == 'mysql'
+        run: |
+          mysql -h 127.0.0.1 -P ${{ matrix.port }} -u root -p'${{ matrix.password }}' \
+            -e "SET GLOBAL explicit_defaults_for_timestamp = OFF;"
+          echo -n "explicit_defaults_for_timestamp sekarang: "
+          mysql -h 127.0.0.1 -P ${{ matrix.port }} -u root -p'${{ matrix.password }}' \
+            -N -e "SELECT @@global.explicit_defaults_for_timestamp;"
 
       # DB_TYPE (bukan DB_URL) supaya CI melewati jalur resolusi config yang sama
       # dengan deploy CapRover.
