@@ -35,7 +35,7 @@ jobs:
           path: build/reports/detekt/
 
   test:
-    name: Tests (SQLite in-memory)
+    name: Tests (SQLite)
     runs-on: ubuntu-latest
     needs: convention-check
 
