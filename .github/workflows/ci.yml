@@ -72,8 +72,9 @@ jobs:
           JWT_SECRET: "ci-test-jwt-secret-that-is-at-least-32-characters-long"
           SESSION_SECRET: "ci-test-session-secret-that-is-32"
           BCRYPT_ROUNDS: "4"
-          DB_URL: "jdbc:sqlite::memory:"
-          DB_DRIVER: "org.sqlite.JDBC"
+          # SQLite file (workspace CI selalu bersih). Jangan pakai ":memory:" — setiap
+          # koneksi Exposed mendapat DB kosong sendiri, sehingga migrasi Flyway tak terlihat.
+          DB_TYPE: "sqlite"
           DB_USER: ""
           DB_PASSWORD: ""
           REDIS_HOST: "localhost"
@@ -98,15 +99,15 @@ jobs:
         include:
           - db: mysql
             image: mysql:8.0
-            url: "jdbc:mysql://localhost:3306/kotlinadmin_test"
-            driver: "com.mysql.cj.jdbc.Driver"
+            type: mysql
+            jdbc: "mysql://"
             user: root
             password: rootpass
             port: 3306
           - db: postgres
             image: postgres:16-alpine
-            url: "jdbc:postgresql://localhost:5432/kotlinadmin_test"
-            driver: "org.postgresql.Driver"
+            type: postgres
+            jdbc: "postgresql://"
             user: postgres
             password: postgrespass
             port: 5432
@@ -144,16 +145,34 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      # DB_TYPE (bukan DB_URL) supaya CI melewati jalur resolusi config yang sama
+      # dengan deploy CapRover.
       - name: Run migration smoke test on ${{ matrix.db }}
-        run: ./gradlew test -Dkotest.tags="smoke" --info
+        run: ./gradlew test --rerun -Dkotest.tags="smoke" --info
         env:
           APP_MODE: "full"
           JWT_SECRET: "ci-test-jwt-secret-that-is-at-least-32-characters-long"
           SESSION_SECRET: "ci-test-session-secret-that-is-32"
           BCRYPT_ROUNDS: "4"
-          DB_URL: ${{ matrix.url }}
-          DB_DRIVER: ${{ matrix.driver }}
+          DB_TYPE: ${{ matrix.type }}
+          DB_HOST: "127.0.0.1"
+          DB_PORT: "${{ matrix.port }}"
+          DB_DATABASE: kotlinadmin_test
           DB_USER: ${{ matrix.user }}
           DB_PASSWORD: ${{ matrix.password }}
           REDIS_HOST: "localhost"
           REDIS_PORT: "6379"
+
+      # Penjaga anti hijau-palsu: job ini pernah lolos tanpa menjalankan satu test pun
+      # (tag "smoke" belum terdaftar) dan tanpa menyentuh DB matrix (config test memaku
+      # SQLite). Tegaskan bahwa smoke test benar-benar jalan DAN benar-benar menabrak
+      # ${{ matrix.db }} — bukan SQLite.
+      - name: Assert migrations really ran against ${{ matrix.db }}
+        run: |
+          report=build/test-results/test/TEST-com.kotlinadmin.smoke.SmokeTest.xml
+          test -f "$report" || { echo "::error::SmokeTest tidak dieksekusi — filter tag rusak"; exit 1; }
+          grep -q 'jdbc:${{ matrix.jdbc }}' "$report" \
+            || { echo "::error::Smoke test tidak memakai ${{ matrix.db }} (kemungkinan jatuh ke SQLite)"; exit 1; }
+          grep -q 'failures="0" errors="0"' "$report" \
+            || { echo "::error::SmokeTest gagal pada ${{ matrix.db }}"; exit 1; }
+          echo "OK — migrasi & smoke test terverifikasi jalan di ${{ matrix.db }}"
